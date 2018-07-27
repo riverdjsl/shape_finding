@@ -1,6 +1,19 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+def trans_comma_str(string):
+	'''to transform comma strings into lists of numbers'''
+	item = []
+	lst = []
+	for i in string[:-1]:
+		if i != ",":
+			item.append(i)
+		else:
+			lst.append(''.join(item))
+			item = []
+			continue
+	return lst
+
 def geometry(P1, P2):
 	dx = P2[0]-P1[0]
 	dy = P2[1]-P1[1]
@@ -116,8 +129,8 @@ def strainenergy(N, M, l, angle, u3, u2, E, f, W, I, A, i, r, t):
 	part4 = N*j*M*l**2*r**3*t*np.pi/(2*E*I**2)
 	return part1+part2+part3+part4
 
-def vars(pp, mt, u3=2, u2=2):
-	return {'u3': u3, 'u2': u2, 'E': mt.E(), 'f': mt.fy(), \
+def vars(pp, mt, mu):
+	return {'u3': mu[0], 'u2': mu[1], 'E': mt.E(), 'f': mt.fy(), \
 			'W': pp.W(), 'I': pp.I(), 'A': pp.A(), 'i': pp.i(), \
 			'r': pp.r, 't': pp.t}
 
@@ -140,12 +153,28 @@ def qualify(P0, P1, P2, P3, A, B, C, D, PC):
 									[j, i], [k, i], [i, PC]
 
 
-material = Steel345(15)
-pipes = [Pipe(200, 10), Pipe(300, 15), Pipe(400, 20)]
-vars1, vars2, vars3 = (vars(i,j) for i, j in zip(pipes, [material]*3))
-plist = pointlist4(4000, 1000, 3000, 5000, 7000, 3000)
-F = (5e3, 10e3, 15e3, 20e3)
-ratio = 0.5
+datain = []
+with open('input.txt') as f:
+	for i in f.readlines():
+		datain.append(trans_comma_str(i))
+
+dataindic = {}
+for j in datain:
+	dicj = {}
+	dicj[j[0]] = [float(k) for k in j[1:]]
+	dataindic.update(dicj)
+
+material = [Steel345(dataindic['topbranch'][1]), \
+			Steel345(dataindic['middlebranch'][1]), \
+			Steel345(dataindic['trunk'][1])]
+pipes = [Pipe(*dataindic['topbranch']), \
+		Pipe(*dataindic['middlebranch']), \
+		Pipe(*dataindic['trunk'])]
+mus = [dataindic['mutb'], dataindic['mumb'], dataindic['mut']]
+vars1, vars2, vars3 = (vars(i, j, k) for i, j, k in zip(pipes, material, mus))
+plist = pointlist4(*dataindic['geometry'])
+F = dataindic['forces']
+ratio = dataindic['ratio']
 
 energies = []
 collection = {}
@@ -170,13 +199,13 @@ for series_No, candidate in enumerate(qualify(*plist)):
 
 	for i, j in dic1.items():
 		energy.append(strainenergy(*j, **vars1))
-		checks.append(check(ratio, *j, **vars1))
+		checks.append(check(ratio[0], *j, **vars1))
 	for i, j in dic2.items():
 		energy.append(strainenergy(*j, **vars2))
-		checks.append(check(ratio, *j, **vars2))
+		checks.append(check(ratio[1], *j, **vars2))
 	for i, j in dic3.items():
 		energy.append(strainenergy(*j, **vars3))
-		checks.append(check(ratio, *j, **vars3))
+		checks.append(check(ratio[2], *j, **vars3))
 
 	if all(checks):
 		energies.append(sum(energy))
@@ -200,5 +229,5 @@ for i in data:
 	for a, b in zip(*i):
 		plt.text(a, b, (a, b), ha='center', va='bottom', fontsize=10)
 plt.show()
-print(data)
+
 
