@@ -141,7 +141,8 @@ def pointlist4(x0, x1, x2, x3, x4, y):
 def qualify(prec, P0, P1, P2, P3, A, B, C, D, PC):
 	mesh1 = mesh(P0, P2, n=prec[0])
 	for i in mesh1:
-		if i[1] > 0:# and i[0] == PC[0]:
+		if i[1] > 0: #and i[0] == PC[0]:
+			#if the trunk is straight upwards, cancel the '#'above
 			for j in mesh1:
 				for k in mesh1:
 						if A[1] > j[1] > i[1] and C[1] > k[1] > i[1]:
@@ -211,10 +212,8 @@ for series_No, candidate in enumerate(qualify(precision, *plist)):
 	if all(checks):
 		energies.append(sum(energy))
 
-
 final = collection[energies.index(min(energies))]
 
-print(precision)
 data = []
 for i in final:
 	xs = []
