@@ -139,19 +139,19 @@ def pointlist4(x0, x1, x2, x3, x4, y):
 		(x1, y), (x2, y), (x3, y), (x4, y), (x0, 0)]
 
 def qualify1(prec, P0, P1, P2, P3, A, B, C, D, PC):
-	'''i, j, k moves arbitrarily'''
+	'''Mid branches moves arbitrarily.'''
 	mesh1 = mesh(P0, P2, n=prec[0])
 	for i in mesh1:
 		if i[1] > 0:
 			for j in mesh1:
 				for k in mesh1:
 					if A[1] > j[1] > i[1] and C[1] > k[1] > i[1]:
-						if A[0] < j[0] < i[0] < k[0] < D[0]:
+						if A[0] < j[0] <= i[0] <= k[0] < D[0]:
 							yield [A, j], [B, j], [C, k], [D, k], \
 								[j, i], [k, i], [i, PC]
 
 def qualify2(prec, P0, P1, P2, P3, A, B, C, D, PC):
-	'''i moves vertically'''
+	'''The trunk top moves vertically.'''
 	mesh1 = mesh(P0, P2, n=prec[0])
 	for i in mesh1:
 		if i[1] > 0 and i[0] == PC[0]:
@@ -163,7 +163,7 @@ def qualify2(prec, P0, P1, P2, P3, A, B, C, D, PC):
 								[j, i], [k, i], [i, PC]
 
 def qualify3(prec, P0, P1, P2, P3, A, B, C, D, PC):
-	'''i, j moves vertically'''
+	'''The trunk top and the top of mid branch 1 move vertically.'''
 	mesh1 = mesh(P0, P2, n=prec[0])
 	for i in mesh1:
 		if i[1] > 0 and i[0] == PC[0]:
@@ -176,7 +176,7 @@ def qualify3(prec, P0, P1, P2, P3, A, B, C, D, PC):
 								[j, i], [k, i], [i, PC]
 
 def qualify4(prec, P0, P1, P2, P3, A, B, C, D, PC):
-	'''i, j, k moves vertically'''
+	'''The trunk top and tops of mid branchs move vertically.'''
 	mesh1 = mesh(P0, P2, n=prec[0])
 	for i in mesh1:
 		if i[1] > 0 and i[0] == PC[0]:
@@ -188,17 +188,46 @@ def qualify4(prec, P0, P1, P2, P3, A, B, C, D, PC):
 							yield [A, j], [B, j], [C, k], [D, k], \
 								[j, i], [k, i], [i, PC]
 
+def qualify5(prec, P0, P1, P2, P3, A, B, C, D, PC):
+	'''The trunk top and the top the 1st mid branch in one vertical line.'''
+	mesh1 = mesh(P0, P2, n=prec[0])
+	for i in mesh1:
+		if i[1] > 0 and i[0] == PC[0]:
+			for j in mesh1:
+				if j [0] == PC[0]:
+					for k in mesh1:
+						if A[1] > j[1] > i[1] and C[1] > k[1] > i[1]:
+							if i[0] < k[0] < D[0]:
+								yield [A, j], [B, j], [C, k], [D, k], \
+									[j, i], [k, i], [i, PC]
+
+def qualify6(prec, P0, P1, P2, P3, A, B, C, D, PC):
+	'''The trunk top and the tops of mid branches in one vertical line.'''
+	mesh1 = mesh(P0, P2, n=prec[0])
+	for i in mesh1:
+		if i[1] > 0 and i[0] == PC[0]:
+			for j in mesh1:
+				if j [0] == PC[0]:
+					for k in mesh1:
+						if k[0] == PC[0]:
+							if A[1] > j[1] > i[1] and C[1] > k[1] > i[1]:
+									yield [A, j], [B, j], [C, k], [D, k], \
+										[j, i], [k, i], [i, PC]
+
+
 def funcchoose(funclist):
+	for i, j in enumerate(funclist):
+		print('Method ', i, ':', j.__doc__)
 	while True:
 		try:
-			fn = input("method:")
+			fn = input("Now choose one:")
 			for i, j in enumerate(funclist):
 				if i == int(fn):
 					return j
 		except Exception:
 			continue
 
-f = [qualify1, qualify2, qualify3, qualify4]
+f = [qualify1, qualify2, qualify3, qualify4, qualify5, qualify6]
 qualify = funcchoose(f)
 
 datain = []
