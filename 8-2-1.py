@@ -166,9 +166,8 @@ def vars(pp, mt, mu):
 			'r': pp.r, 't': pp.t}
 
 
-def pointlist8(x0, x1, x2, x3, x4, y1, y2, y3, y4, z1, z2, z3, z4, \
-				x1a, x2a, x3a, x4a, y1a, y2a, y3a, y4a, z1a, z2a, z3a, \
-				z4a):
+def pointlist8(x0, x1, x2, x3, x4, x1a, x2a, x3a, x4a, y1, y2, y3, y4, \
+				y1a, y2a, y3a, y4a, z1, z2, z3, z4, z1a, z2a, z3a, z4a):
 	return [(x1a, 0, z1a), (x4, y4, z4), \
 		(x1, y1, z1), (x2, y2, z2), (x3, y3, z3), (x4, y4, z4), \
 		(x1a, y1a, z1a), (x2a, y2a, z2a), (x3a, y3a, z3a), \
@@ -201,7 +200,7 @@ def qualify2(prec, P0, P1, A, B, C, D, Aa, Ba, Ca, Da, PC):
 							yield [A, j], [B, j], [C, k], [D, k], \
 								[Aa, j], [Ba, j], [Ca, k], [Da, k], \
 								[j, i], [k, i], [i, PC]
-
+								
 
 def funcchoose(funclist):
 	for i, j in enumerate(funclist):
@@ -298,27 +297,27 @@ for i in rd[1]:
 	print('D = {:.1f}, t = {:.1f}'.format(i.D, i.t))
 
 
-for i in data:
-	plt.subplot(221)
-	plt.plot(*i[0:3:2])
-	plt.subplot(223)
-	plt.plot(*i[:2])
-	plt.subplot(224)
-	plt.plot(*i[::-1][:2])
 
+ax1 = plt.subplot(221)
+ax1.axis('equal')
+ax2 = plt.subplot(223)
+ax2.axis('equal')
+ax3 = plt.subplot(224)
+ax3.axis('equal')
 for i in data:
-	plt.subplot(221)
-	plt.plot(*i[0:3:2], 'bo')
+	ax1.plot(*i[0:3:2])
+	ax2.plot(*i[:2])
+	ax3.plot(*i[::-1][:2])
+
+	ax1.plot(*i[0:3:2], 'bo')
 	for a, b in zip(*i[0:3:2]):
-		plt.text(a, b, (a, b), ha='center', va='bottom', fontsize=10)
-	plt.subplot(223)
-	plt.plot(*i[:2], 'bo')
-	for a, b in zip(*i[:2]):
-		plt.text(a, b, (a, b), ha='center', va='bottom', fontsize=10)
-	plt.subplot(224)
-	plt.plot(*i[::-1][:2], 'bo')
-	for a, b in zip(*i[::-1][:2]):
-		plt.text(a, b, (a, b), ha='center', va='bottom', fontsize=10)
+		ax1.text(a, b, (a, b), ha='center', va='bottom', fontsize=10)
+	ax2.plot(*i[:2], 'bo')
+	for c, d in zip(*i[:2]):
+		ax2.text(c, d, (c, d), ha='center', va='bottom', fontsize=10)
+	ax3.plot(*i[::-1][:2], 'bo')
+	for e, f in zip(*i[::-1][:2]):
+		ax3.text(e, f, (e, f), ha='center', va='bottom', fontsize=10)
 
 plt.show()
 
