@@ -171,7 +171,7 @@ def pointlist8(x0, x1, x2, x3, x4, x1a, x2a, x3a, x4a, y1, y2, y3, y4, \
 def qualify(P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
 	'''random points'''
 	randnum = np.random.rand()
-	i = randpt(PC, (PC[0], P7[1], PC[2]), randnum)
+	i = randpt(PC, (PC[0], Aa[1], PC[2]), randnum)
 	j = randpt((A[0], i[1], 0), (B[0], A[1], max(A[2], B[2])), randnum)
 	ja = randpt((Aa[0], i[1], min(Aa[2], Ba[2])), (Ba[0], Aa[1], 0), randnum)
 	k = randpt((C[0], i[1], 0), (C[0], C[1], max(C[2], D[2])), randnum)
