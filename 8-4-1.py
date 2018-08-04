@@ -251,8 +251,6 @@ def rawdata(filein):
 	print("{}The covergence criteria is {}!".format('\n', criteria))
 	while count1 <= 1000:
 		tick = energymin
-		covergence_criteria = tick/1000
-
 		i = qualify(*plist)
 		resulti = energy(i, forces)
 		if resulti[1] is True:
