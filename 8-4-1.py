@@ -18,7 +18,7 @@ def trans_comma_str(string):
 def geometry(P1, P2):
 	return np.array(P2)-np.array(P1)
 
-	
+
 def NM(Nv, M0, lv):
 	l = np.sqrt(lv.dot(lv))
 	elv = lv/l
@@ -35,26 +35,19 @@ def NM(Nv, M0, lv):
 	P = N*np.cos(thitar)*elv
 	M = N*np.sin(thitar)*np.sqrt(lv.dot(lv))*eMv+M0
 	return P, M, l, thitar
-	
 
-def mesh(P1, P2, n=1):
+
+def randpt(P1, P2, rd):
 	Xs = min(P1[0], P2[0])
 	Xe = max(P1[0], P2[0])
 	Ys = min(P1[1], P2[1])
 	Ye = max(P1[1], P2[1])
 	Zs = min(P1[2], P2[2])
-	Ze = max(P1[2], P2[2])	
-	X = np.arange(Xs, Xe, n)
-	Y = np.arange(Ys, Ye, n)
-	Z = np.arange(Zs, Ze, n)
-	X, Y = np.meshgrid(X, Y)
-	sp = X.shape
-	result = []
-	for k in Z:
-		for i in range(sp[0]):
-			for j in range(sp[1]):
-				result.append((X[i][j], Y[i][j], k))
-	return result
+	Ze = max(P1[2], P2[2])
+	X = rd*(Xe-Xs)+Xs
+	Y = rd*(Ye-Ys)+Ys
+	Z = rd*(Ze-Zs)+Zs
+	return (X, Y, Z)
 
 
 class Steel345():
@@ -80,7 +73,7 @@ class Steel345():
 
 
 def mtgenerater(t):
-	return [Steel345(t), Steel345(2*t),\
+	return [Steel345(t), Steel345(np.sqrt(2)*t),\
 			Steel345(2*np.sqrt(2)*t)]
 
 
@@ -104,7 +97,7 @@ class Pipe():
 
 
 def pipegenerater(t, factor):
-	return [Pipe(t*factor, t), Pipe(2*t*factor, 2*t),\
+	return [Pipe(t*factor, t), Pipe(np.sqrt(2)*t*factor, np.sqrt(2)*t),\
 			Pipe(2*np.sqrt(2)*t*factor, 2*np.sqrt(2)*t)]
 
 
@@ -168,67 +161,23 @@ def vars(pp, mt, mu):
 
 def pointlist8(x0, x1, x2, x3, x4, x1a, x2a, x3a, x4a, y1, y2, y3, y4, \
 				y1a, y2a, y3a, y4a, z1, z2, z3, z4, z1a, z2a, z3a, z4a):
-	return [(x1a, 0, z1a), (x0, y2a, 0), (x1, 0, 0), (x0, y2, z2), \
-			(x0, 0, z3a), (x4a, y4a, 0), (x0, 0, 0), (x4, y4, z4), \
+	return [(x1a, 0, min(z1a, z2a)), (x0, y2a, 0), (x1, 0, 0), (x0, y2, z2), \
+			(x0, 0, min(z3a, z4a)), (x4a, y4a, 0), (x0, 0, 0), (x4, y4, z4), \
 		(x1, y1, z1), (x2, y2, z2), (x3, y3, z3), (x4, y4, z4), \
 		(x1a, y1a, z1a), (x2a, y2a, z2a), (x3a, y3a, z3a), \
 		(x4a, y4a, z4a), (x0, 0, 0)]
 
 
-def qualify1(prec, P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
-	'''Mid branches moves arbitrarily.'''
-	mesh0 = mesh(P0, P7, n=prec[1])
-	mesh1 = mesh(P2, P3, n=prec[0])
-	mesh1a = mesh(P0, P1, n=prec[0])
-	mesh2 = mesh(P6, P7, n=prec[0])
-	mesh2a = mesh(P4, P5, n=prec[0])
-	for i in mesh0:
-		if i[1] > 0:
-			for j in mesh1:
-				for ja in mesh1a:
-					if A[1] > j[1] > i[1] and Aa[1] > ja[1] > i[1]:
-						for k in mesh2:
-							for ka in mesh2a:
-								if C[1] > k[1] > i[1] and Ca[1] > ka[1] > i[1]:
-									if A[0] < j[0] < i[0] < k[0] < D[0] and Aa[0] < ja[0] < i[0] < ka[0] < Da[0]:
-										if Aa[2] < ja[2] < 0 and 0 < j[2] < A[2] and Ca[2] < ka[2] < 0 and 0 < k[2] < C[2]:
-											yield [A, j], [B, j], [C, k], [D, k], [Aa, ja], [Ba, ja], [Ca, ka], [Da, ka], [j, i], [k, i], [ja, i], [ka, i], [i, PC]
+def qualify(P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
+	'''random points'''
+	randnum = np.random.rand()
+	i = randpt(PC, (PC[0], P7[1], PC[2]), randnum)
+	j = randpt((A[0], i[1], 0), (B[0], A[1], max(A[2], B[2])), randnum)
+	ja = randpt((Aa[0], i[1], min(Aa[2], Ba[2])), (Ba[0], Aa[1], 0), randnum)
+	k = randpt((C[0], i[1], 0), (C[0], C[1], max(C[2], D[2])), randnum)
+	ka = randpt((Ca[0], i[1], min(Ca[2], Da[2])), (Da[0], Ca[1], 0), randnum)
+	return [A, j], [B, j], [C, k], [D, k], [Aa, ja], [Ba, ja], [Ca, ka], [Da, ka], [j, i], [k, i], [ja, i], [ka, i], [i, PC]
 
-
-def qualify2(prec, P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
-	'''Mid branches moves arbitrarily.'''
-	mesh0 = mesh(P0, P7, n=prec[0])
-	mesh1 = mesh(P2, P3, n=prec[1])
-	mesh1a = mesh(P0, P1, n=prec[1])
-	mesh2 = mesh(P6, P7, n=prec[1])
-	mesh2a = mesh(P4, P5, n=prec[1])
-	for i in mesh0:
-		if i[1] > 0 and i[0] == PC[0] and i[2] == 0:
-			for j in mesh1:
-				for ja in mesh1a:
-					if A[1] > j[1] > i[1] and Aa[1] > ja[1] > i[1]:
-						for k in mesh2:
-							for ka in mesh2a:
-								if C[1] > k[1] > i[1] and Ca[1] > ka[1] > i[1]:
-									if A[0] < j[0] < i[0] < k[0] < D[0] and Aa[0] < ja[0] < i[0] < ka[0] < Da[0]:
-										if Aa[2] < ja[2] < 0 and 0 < j[2] < A[2] and Ca[2] < ka[2] < 0 and 0 < k[2] < C[2]:										
-											yield [A, j], [B, j], [C, k], [D, k], [Aa, ja], [Ba, ja], [Ca, ka], [Da, ka], [j, i], [k, i], [ja, i], [ka, i], [i, PC]
-
-
-def funcchoose(funclist):
-	for i, j in enumerate(funclist):
-		print('Method ', i, ':', j.__doc__)
-	while True:
-		try:
-			fn = input("Now choose one:")
-			for i, j in enumerate(funclist):
-				if i == int(fn):
-					return j
-		except Exception:
-			continue
-
-f = [qualify1, qualify2]
-qualify = funcchoose(f)
 
 def rawdata(filein):
 	datain = []
@@ -248,18 +197,14 @@ def rawdata(filein):
 	vars1, vars2, vars3 = (vars(i, j, k) \
 		for i, j, k in zip(pipes, material, mus))
 	plist = pointlist8(*dataindic['geometry'])
-	F = dataindic['forces']
+	forces = dataindic['forces']
 	ratio = dataindic['ratio']
-	precision = dataindic['precision']
+	criteria = dataindic['precision'][0]
 
 	F_direction = np.array([0, -1, 0])
-	energies = []
-	collection = {}
-	for series_No, candidate in enumerate(qualify(precision, *plist)):
-		collection[series_No] = candidate
-		print('verifying: possible config '+str(series_No))
 
-		energy = []
+	def energy(candidate, F):
+		energyi = []
 		checks = []
 
 		dic1 = {}
@@ -269,30 +214,64 @@ def rawdata(filein):
 
 		dic2 = {}
 		dic2[8] = NM((F[0]+F[1])*F_direction, dic1[0][1]+dic1[1][1], np.array(candidate[8][0])-np.array(candidate[8][1]))
-		dic2[10] = NM((F[4]+F[5])*F_direction, dic1[4][1]+dic1[5][1], np.array(candidate[10][0])-np.array(candidate[10][1]))	
+		dic2[10] = NM((F[4]+F[5])*F_direction, dic1[4][1]+dic1[5][1], np.array(candidate[10][0])-np.array(candidate[10][1]))
 		dic2[9] = NM((F[2]+F[3])*F_direction, dic1[2][1]+dic1[3][1], np.array(candidate[9][0])-np.array(candidate[9][1]))
 		dic2[11] = NM((F[6]+F[7])*F_direction, dic1[6][1]+dic1[7][1], np.array(candidate[11][0])-np.array(candidate[11][1]))
-		
+
 		dic3 = {}
 		dic3[12] = NM(sum(F)*F_direction, dic2[8][1]+dic2[9][1]+dic2[10][1]+dic2[11][1], np.array(candidate[12][0])-np.array(candidate[12][1]))
 
 		for i, j in dic1.items():
-			energy.append(strainenergy(*j, **vars1))
+			energyi.append(strainenergy(*j, **vars1))
 			checks.append(check(ratio[0], *j, **vars1))
 		for i, j in dic2.items():
-			energy.append(strainenergy(*j, **vars2))
+			energyi.append(strainenergy(*j, **vars2))
 			checks.append(check(ratio[1], *j, **vars2))
 		for i, j in dic3.items():
-			energy.append(strainenergy(*j, **vars3))
+			energyi.append(strainenergy(*j, **vars3))
 			checks.append(check(ratio[2], *j, **vars3))
 
-		if all(checks):
-			energies.append(sum(energy))
-	try:
-		return collection[energies.index(min(energies))], pipes
+		energy = sum(energyi)
+		return energy, all(checks)
 
-	except Exception:
-		print('error')
+	count2 = 1
+	while count2 <= 100000:
+		xmin = qualify(*plist)
+		if energy(xmin, forces)[1] is True:
+			energymin = energy(xmin, forces)[0]
+			print("Current sections seems alright! Go for the best solution!")
+			break
+		print("Try checking sections, try{}.".format(count2))
+		count2 += 1
+	else:
+		print("No convergence! Try new sections!")
+
+	count1 = 1
+	count3 = 1
+	print("{}The covergence criteria is {}!".format('\n', criteria))
+	while count1 <= 1000:
+		tick = energymin
+		covergence_criteria = tick/1000
+
+		i = qualify(*plist)
+		resulti = energy(i, forces)
+		if resulti[1] is True:
+			if resulti[0] >= energymin:
+				continue
+			else:
+				xmin = i
+				energymin = resulti[0]
+				print(abs(tick-energymin))
+				if abs(tick-energymin) <= criteria:
+					break
+			count1 += 1
+
+		count3 += 1
+		if count3 >= 10000:
+			print("Too many tryings!")
+			break
+
+	return xmin, pipes
 
 data = []
 rd = rawdata('input8.txt')
@@ -305,8 +284,6 @@ for i in rd[0]:
 		ys.append(j[1])
 		zs.append(j[2])
 	data.append([xs, ys, zs])
-	
-print(data)
 
 for i in rd[1]:
 	print('D = {:.1f}, t = {:.1f}'.format(i.D, i.t))
@@ -326,12 +303,15 @@ for i in data:
 
 	ax1.plot(*i[0:3:2], 'bo')
 	for a, b in zip(*i[0:3:2]):
+		a, b = int(a), int(b)
 		ax1.text(a, b, (a, b), ha='center', va='bottom', fontsize=10)
 	ax2.plot(*i[:2], 'bo')
 	for c, d in zip(*i[:2]):
+		c, d = int(c), int(d)
 		ax2.text(c, d, (c, d), ha='center', va='bottom', fontsize=10)
 	ax3.plot(*i[::-1][:2], 'bo')
 	for e, f in zip(*i[::-1][:2]):
+		e, f = int(e), int(f)
 		ax3.text(e, f, (e, f), ha='center', va='bottom', fontsize=10)
 
 plt.show()
