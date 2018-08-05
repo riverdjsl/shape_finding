@@ -38,15 +38,28 @@ def NM(Nv, M0, lv):
 
 
 def randpt(P1, P2, rd):
-	Xs = min(P1[0], P2[0])
-	Xe = max(P1[0], P2[0])
-	Ys = min(P1[1], P2[1])
-	Ye = max(P1[1], P2[1])
-	Zs = min(P1[2], P2[2])
-	Ze = max(P1[2], P2[2])
+	Xs = P1[0]
+	Xe = P2[0]
+	Ys = P1[1]
+	Ye = P2[1]
+	Zs = P1[2]
+	Ze = P2[2]
 	X = rd*(Xe-Xs)+Xs
 	Y = rd*(Ye-Ys)+Ys
 	Z = rd*(Ze-Zs)+Zs
+	return (X, Y, Z)
+
+
+def randpt1(P1, P2, rd1, rd2, rd3):
+	Xs = P1[0]
+	Xe = P2[0]
+	Ys = P1[1]
+	Ye = P2[1]
+	Zs = P1[2]
+	Ze = P2[2]
+	X = rd1*(Xe-Xs)+Xs
+	Y = rd2*(Ye-Ys)+Ys
+	Z = rd3*(Ze-Zs)+Zs
 	return (X, Y, Z)
 
 
@@ -168,15 +181,60 @@ def pointlist8(x0, x1, x2, x3, x4, x1a, x2a, x3a, x4a, y1, y2, y3, y4, \
 		(x4a, y4a, z4a), (x0, 0, 0)]
 
 
-def qualify(P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
-	'''random points'''
-	randnum = np.random.rand()
-	i = randpt(PC, (PC[0], Aa[1], PC[2]), randnum)
-	j = randpt((A[0], i[1], 0), (B[0], A[1], max(A[2], B[2])), randnum)
-	ja = randpt((Aa[0], i[1], min(Aa[2], Ba[2])), (Ba[0], Aa[1], 0), randnum)
-	k = randpt((C[0], i[1], 0), (C[0], C[1], max(C[2], D[2])), randnum)
-	ka = randpt((Ca[0], i[1], min(Ca[2], Da[2])), (Da[0], Ca[1], 0), randnum)
+def qualify1(P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
+	'''1 random number. Each point moves linearly and proportionally.'''
+	rp = np.random.rand()
+	i = randpt(PC, (PC[0], Aa[1], PC[2]), rp)
+	j = randpt((i[0], i[1], 0), (A[0], A[1], max(A[2], B[2])), rp)
+	ja = randpt( (i[0], i[1], 0), (Aa[0], Aa[1], min(Aa[2], Ba[2])), rp)
+	k = randpt((i[0], i[1], 0), (D[0], D[1], max(C[2], D[2])), rp)
+	ka = randpt((i[0], i[1], 0), (Da[0], Da[1], min(Ca[2], Da[2])), rp)
 	return [A, j], [B, j], [C, k], [D, k], [Aa, ja], [Ba, ja], [Ca, ka], [Da, ka], [j, i], [k, i], [ja, i], [ka, i], [i, PC]
+
+
+def qualify2(P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
+	'''5 random numbers. Each point moves linearly.'''
+	rp1 = np.random.rand()
+	rp2 = np.random.rand()
+	rp3 = np.random.rand()
+	rp4 = np.random.rand()
+	rp5 = np.random.rand()
+	i = randpt(PC, (PC[0], Aa[1], PC[2]), rp1)
+	j = randpt((i[0], i[1], 0), (A[0], A[1], max(A[2], B[2])), rp2)
+	ja = randpt( (i[0], i[1], 0), (Aa[0], Aa[1], min(Aa[2], Ba[2])), rp3)
+	k = randpt((i[0], i[1], 0), (D[0], D[1], max(C[2], D[2])), rp4)
+	ka = randpt((i[0], i[1], 0), (Da[0], Da[1], min(Ca[2], Da[2])), rp5)
+	return [A, j], [B, j], [C, k], [D, k], [Aa, ja], [Ba, ja], [Ca, ka], [Da, ka], [j, i], [k, i], [ja, i], [ka, i], [i, PC]
+
+
+def qualify3(P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
+	'''3 random numbers. Points moves vertically linearly.'''
+	rp = np.random.rand()
+	rp1 = np.random.rand()
+	rp3 = np.random.rand()
+	i = randpt(PC, (PC[0], Aa[1], PC[2]), rp)
+	j = randpt1((i[0], i[1], 0), (A[0], A[1], max(A[2], B[2])), rp1, rp, rp3)
+	ja = randpt1( (i[0], i[1], 0), (Aa[0], Aa[1], min(Aa[2], Ba[2])), rp1, rp, rp3)
+	k = randpt1((i[0], i[1], 0), (D[0], D[1], max(C[2], D[2])), rp1, rp, rp3)
+	ka = randpt1((i[0], i[1], 0), (Da[0], Da[1], min(Ca[2], Da[2])), rp1, rp, rp3)
+	return [A, j], [B, j], [C, k], [D, k], [Aa, ja], [Ba, ja], [Ca, ka], [Da, ka], [j, i], [k, i], [ja, i], [ka, i], [i, PC]
+
+
+def funcchoose(funclist):
+	for i, j in enumerate(funclist):
+		print('Method ', i, ':', j.__doc__)
+	while True:
+		try:
+			fn = input("Now choose one:")
+			for i, j in enumerate(funclist):
+				if i == int(fn):
+					return j, j.__doc__
+		except Exception:
+			continue
+
+f = [qualify1, qualify2, qualify3]
+funcchosen = funcchoose(f)
+qualify = funcchosen[0]
 
 
 def rawdata(filein):
@@ -287,13 +345,20 @@ for i in rd[1]:
 	print('D = {:.1f}, t = {:.1f}'.format(i.D, i.t))
 
 
-
+plt.suptitle(funcchosen[1])
 ax1 = plt.subplot(221)
 ax1.axis('equal')
+ax1.set_title('Overlook View')
+plt.ylabel('Z')
 ax2 = plt.subplot(223)
 ax2.axis('equal')
+ax2.set_title('Front View')
+plt.ylabel('Y')
+plt.xlabel('X')
 ax3 = plt.subplot(224)
 ax3.axis('equal')
+ax3.set_title('Side View')
+plt.xlabel('Z')
 for i in data:
 	ax1.plot(*i[0:3:2])
 	ax2.plot(*i[:2])
