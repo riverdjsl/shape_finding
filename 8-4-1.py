@@ -191,8 +191,18 @@ def qualify1(P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
 	ka = randpt((i[0], i[1], 0), (Da[0], Da[1], min(Ca[2], Da[2])), rp)
 	return [A, j], [B, j], [C, k], [D, k], [Aa, ja], [Ba, ja], [Ca, ka], [Da, ka], [j, i], [k, i], [ja, i], [ka, i], [i, PC]
 
-
 def qualify2(P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
+	'''2 random numbers. Each of 4 branches moves linearly and proportionally.'''
+	rp = np.random.rand()
+	rp2 = np.random.rand()
+	i = randpt(PC, (PC[0], Aa[1], PC[2]), rp2)
+	j = randpt((i[0], i[1], 0), (A[0], A[1], max(A[2], B[2])), rp)
+	ja = randpt( (i[0], i[1], 0), (Aa[0], Aa[1], min(Aa[2], Ba[2])), rp)
+	k = randpt((i[0], i[1], 0), (D[0], D[1], max(C[2], D[2])), rp)
+	ka = randpt((i[0], i[1], 0), (Da[0], Da[1], min(Ca[2], Da[2])), rp)
+	return [A, j], [B, j], [C, k], [D, k], [Aa, ja], [Ba, ja], [Ca, ka], [Da, ka], [j, i], [k, i], [ja, i], [ka, i], [i, PC]
+
+def qualify3(P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
 	'''5 random numbers. Each point moves linearly.'''
 	rp1 = np.random.rand()
 	rp2 = np.random.rand()
@@ -207,7 +217,7 @@ def qualify2(P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
 	return [A, j], [B, j], [C, k], [D, k], [Aa, ja], [Ba, ja], [Ca, ka], [Da, ka], [j, i], [k, i], [ja, i], [ka, i], [i, PC]
 
 
-def qualify3(P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
+def qualify4(P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
 	'''3 random numbers. Points moves vertically linearly.'''
 	rp = np.random.rand()
 	rp1 = np.random.rand()
@@ -232,7 +242,7 @@ def funcchoose(funclist):
 		except Exception:
 			continue
 
-f = [qualify1, qualify2, qualify3]
+f = [qualify1, qualify2, qualify3, qualify4]
 funcchosen = funcchoose(f)
 qualify = funcchosen[0]
 
