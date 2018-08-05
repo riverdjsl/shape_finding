@@ -337,7 +337,7 @@ def rawdata(filein):
 			print("Too many tryings!")
 			break
 
-	return xmin, pipes
+	return xmin, pipes, energymin
 
 data = []
 rd = rawdata('input8.txt')
@@ -369,6 +369,10 @@ ax3 = plt.subplot(224)
 ax3.axis('equal')
 ax3.set_title('Side View')
 plt.xlabel('Z')
+ax4 = plt.subplot(222)
+ax4.text(0.3, 0.6, 'The total energy:', fontsize=10)
+ax4.text(0.3, 0.5, rd[2], fontsize=10, color='red')
+ax4.set_axis_off()
 for i in data:
 	ax1.plot(*i[0:3:2])
 	ax2.plot(*i[:2])
