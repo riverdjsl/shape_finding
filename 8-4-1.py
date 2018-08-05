@@ -181,9 +181,9 @@ def pointlist8(x0, x1, x2, x3, x4, x1a, x2a, x3a, x4a, y1, y2, y3, y4, \
 		(x4a, y4a, z4a), (x0, 0, 0)]
 
 
-def qualify1(P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
+def qualify1(randp, P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
 	'''1 random number. Each point moves linearly and proportionally.'''
-	rp = np.random.rand()
+	rp = randp[0]
 	i = randpt(PC, (PC[0], Aa[1], PC[2]), rp)
 	j = randpt((i[0], i[1], 0), (A[0], A[1], max(A[2], B[2])), rp)
 	ja = randpt( (i[0], i[1], 0), (Aa[0], Aa[1], min(Aa[2], Ba[2])), rp)
@@ -191,10 +191,10 @@ def qualify1(P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
 	ka = randpt((i[0], i[1], 0), (Da[0], Da[1], min(Ca[2], Da[2])), rp)
 	return [A, j], [B, j], [C, k], [D, k], [Aa, ja], [Ba, ja], [Ca, ka], [Da, ka], [j, i], [k, i], [ja, i], [ka, i], [i, PC]
 
-def qualify2(P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
+def qualify2(randp, P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
 	'''2 random numbers. Each of 4 branches moves linearly and proportionally.'''
-	rp = np.random.rand()
-	rp2 = np.random.rand()
+	rp = randp[0]
+	rp2 = randp[1]
 	i = randpt(PC, (PC[0], Aa[1], PC[2]), rp2)
 	j = randpt((i[0], i[1], 0), (A[0], A[1], max(A[2], B[2])), rp)
 	ja = randpt( (i[0], i[1], 0), (Aa[0], Aa[1], min(Aa[2], Ba[2])), rp)
@@ -202,13 +202,13 @@ def qualify2(P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
 	ka = randpt((i[0], i[1], 0), (Da[0], Da[1], min(Ca[2], Da[2])), rp)
 	return [A, j], [B, j], [C, k], [D, k], [Aa, ja], [Ba, ja], [Ca, ka], [Da, ka], [j, i], [k, i], [ja, i], [ka, i], [i, PC]
 
-def qualify3(P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
+def qualify3(randp, P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
 	'''5 random numbers. Each point moves linearly.'''
-	rp1 = np.random.rand()
-	rp2 = np.random.rand()
-	rp3 = np.random.rand()
-	rp4 = np.random.rand()
-	rp5 = np.random.rand()
+	rp1 = randp[0]
+	rp2 = randp[1]
+	rp3 = randp[2]
+	rp4 = randp[3]
+	rp5 = randp[4]
 	i = randpt(PC, (PC[0], Aa[1], PC[2]), rp1)
 	j = randpt((i[0], i[1], 0), (A[0], A[1], max(A[2], B[2])), rp2)
 	ja = randpt( (i[0], i[1], 0), (Aa[0], Aa[1], min(Aa[2], Ba[2])), rp3)
@@ -217,11 +217,11 @@ def qualify3(P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
 	return [A, j], [B, j], [C, k], [D, k], [Aa, ja], [Ba, ja], [Ca, ka], [Da, ka], [j, i], [k, i], [ja, i], [ka, i], [i, PC]
 
 
-def qualify4(P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
+def qualify4(randp, P0, P1, P2, P3, P4, P5, P6, P7, A, B, C, D, Aa, Ba, Ca, Da, PC):
 	'''3 random numbers. Points moves vertically linearly.'''
-	rp = np.random.rand()
-	rp1 = np.random.rand()
-	rp3 = np.random.rand()
+	rp = randp[0]
+	rp1 = randp[1]
+	rp3 = randp[2]
 	i = randpt(PC, (PC[0], Aa[1], PC[2]), rp)
 	j = randpt1((i[0], i[1], 0), (A[0], A[1], max(A[2], B[2])), rp1, rp, rp3)
 	ja = randpt1( (i[0], i[1], 0), (Aa[0], Aa[1], min(Aa[2], Ba[2])), rp1, rp, rp3)
@@ -302,11 +302,16 @@ def rawdata(filein):
 		energy = sum(energyi)
 		return energy, all(checks)
 
+	rands = []
+	mins = []
 	count2 = 1
 	while count2 <= 100000:
-		xmin = qualify(*plist)
+		randnums = np.random.rand(5)
+		xmin = qualify(randnums, *plist)
 		if energy(xmin, forces)[1] is True:
 			energymin = energy(xmin, forces)[0]
+			rands.append(randnums)
+			mins.append(energymin)
 			print("Current sections seems alright! Go for the best solution!")
 			break
 		print("Try checking sections, try{}.".format(count2))
@@ -318,16 +323,21 @@ def rawdata(filein):
 	count3 = 1
 	print("{}The covergence criteria is {}!".format('\n', criteria))
 	while count1 <= 1000:
+		randnums2 = np.random.rand(5)
 		tick = energymin
-		i = qualify(*plist)
+		i = qualify(randnums2, *plist)
 		resulti = energy(i, forces)
 		if resulti[1] is True:
 			if resulti[0] >= energymin:
+				rands.append(randnums2)
+				mins.append(resulti[0])
 				continue
 			else:
 				xmin = i
 				energymin = resulti[0]
 				print(abs(tick-energymin))
+				rands.append(randnums2)
+				mins.append(energymin)
 				if abs(tick-energymin) <= criteria:
 					break
 			count1 += 1
@@ -337,7 +347,7 @@ def rawdata(filein):
 			print("Too many tryings!")
 			break
 
-	return xmin, pipes, energymin
+	return xmin, pipes, energymin, rands, mins
 
 
 data = []
@@ -355,24 +365,23 @@ for i in rd[0]:
 for i in rd[1]:
 	print('D = {:.1f}, t = {:.1f}'.format(i.D, i.t))
 
-
 plt.suptitle(funcchosen[1])
-ax1 = plt.subplot(221)
+ax1 = plt.subplot(321)
 ax1.axis('equal')
 ax1.set_title('Overlook View')
 plt.ylabel('Z')
-ax2 = plt.subplot(223)
+ax2 = plt.subplot(323)
 ax2.axis('equal')
 ax2.set_title('Front View')
 plt.ylabel('Y')
 plt.xlabel('X')
-ax3 = plt.subplot(224)
+ax3 = plt.subplot(324)
 ax3.axis('equal')
 ax3.set_title('Side View')
 plt.xlabel('Z')
-ax4 = plt.subplot(222)
-ax4.text(0.3, 0.6, 'The total energy:', fontsize=10)
-ax4.text(0.3, 0.5, rd[2], fontsize=10, color='red')
+ax4 = plt.subplot(322)
+ax4.text(0.3, 0.7, 'The total energy:', fontsize=10)
+ax4.text(0.3, 0.5, int(rd[2]), fontsize=15, color='red')
 ax4.set_axis_off()
 for i in data:
 	ax1.plot(*i[0:3:2])
@@ -392,9 +401,14 @@ for i in data:
 		e, f = int(e), int(f)
 		ax3.text(e, f, (e, f), ha='center', va='bottom', fontsize=10)
 
+rx = [i[0] for i in rd[3]]
+ax5 = plt.subplot(3, 5, 11)
+ax5.plot(rx, rd[4], 'r^')
 
-
+for num in range(1, 5):
+	rx = [i[num] for i in rd[3]]
+	ax = plt.subplot(3, 5, 11+num, sharey=ax5)
+	plt.setp(ax.get_yticklabels(), visible=False)
+	ax.plot(rx, rd[4], 'r^')
 
 plt.show()
-
-
