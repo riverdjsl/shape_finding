@@ -339,6 +339,7 @@ def rawdata(filein):
 
 	return xmin, pipes, energymin
 
+
 data = []
 rd = rawdata('input8.txt')
 for i in rd[0]:
@@ -390,6 +391,9 @@ for i in data:
 	for e, f in zip(*i[::-1][:2]):
 		e, f = int(e), int(f)
 		ax3.text(e, f, (e, f), ha='center', va='bottom', fontsize=10)
+
+
+
 
 plt.show()
 
