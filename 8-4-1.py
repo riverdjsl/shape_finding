@@ -343,7 +343,7 @@ def rawdata(filein):
 			count1 += 1
 
 		count3 += 1
-		if count3 >= 10000:
+		if count3 >= 100000:
 			print("Too many tryings!")
 			break
 
