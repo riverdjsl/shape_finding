@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from mpl_toolkits.mplot3d import Axes3D
 
 def trans_comma_str(string):
 	'''to transform comma strings into lists of numbers'''
@@ -95,8 +97,8 @@ def fi(lambdai, f, E):
 
 
 def check(ratio, Nv, Mv, lv, angle, u3, u2, E, f, W, I, A, i, r, t):
-	N = np.sqrt(Nv.dot(Nv))
-	M = np.sqrt(Mv.dot(Mv))
+	N = abs(np.sqrt(Nv.dot(Nv)))
+	M = abs(np.sqrt(Mv.dot(Mv)))
 	l = lv
 	lambdax = u3*l/i
 	lambday = u2*l/i
@@ -232,7 +234,7 @@ def point2(value, TF, joints):
 	else:
 		return 0
 
-		
+
 def funcchoose(funclist):
 	for i, j in enumerate(funclist):
 		print('Method ', i, ':', j.__doc__)
@@ -295,11 +297,11 @@ def mutation(chromosome):
 		return chromosome
 
 
-def population_mutation(population):
-	if np.random.rand() >= 0.7:
+def population_mutation(population, possibility=0.3):
+	if np.random.rand() >= 1-possibility:
 		mu_person_index = int(np.random.rand()*len(population))
 		mu_person = population.pop(mu_person_index)
-			
+
 		new_indi = []
 		for chromosome in mu_person:
 			new_indi.append(mutation(chromosome))
@@ -394,42 +396,62 @@ def rawdata(filein):
 		energy = sum(energyi)
 		return energy, all(checks), positions
 
-	population = []	
+	population = []
 	for i in range(p_num):
 		population.append(individual_generator(np.random.rand(16)))
 
 	generation = 0
 #	energy_g = list(map(energy, population, [forces]*len(population)))
 
+	animate = []
 	energymins = []
 	while generation <= g_num:
+
 		print('\n\n\nGeneration {}.\n'.format(generation))
+
 		energy_g = list(map(energy, population, [forces]*len(population)))
 		pts = [point(i, j, k) for i, j, k in energy_g]
-		if generation > 0.1*g_num and abs(np.average(pts)-max(pts)) <= 0.01:
+
+		if generation > 0.6*g_num and abs(np.average(pts)-max(pts)) <= 0.005:
 			print("Ending the run 'cause convergence almost achieved!")
 			break
+
 		print('\n\n'.join(list('  '.join(list('{:>5.2f}'.format(i) for i in pts)[j: j+5]) for j in range(0, len(pts), 5))))
+
 		pama = select(population, pts)
 		kids = reproduction(pama)
 		e_kids = list(map(energy, kids, [forces]*len(kids)))
 		pts_k = [point(i, j, k) for i, j, k in e_kids]
+
 		for i in sorted(pts[:])[:4]:
 			for j in pts_k[:]:
 				if j >= i:
 					population[pts.index(i)] = kids[pts_k.index(j)]
 					pts_k.pop(pts_k.index(j))
+
 		if abs(np.average(pts)-max(pts)) > 1:
 			population = population_mutation(population)
+		else:
+			population = population_mutation(population, possibility=0.00)
+
 		energymins.append(min(energy_g)[0])
 		individual_em = population[energy_g.index(min(energy_g))]
+
+		animate_i = [[]]*5
+		if generation%1 == 0:
+			stepdata = chromosome_translator(individual_em, tmax, *plist)
+			animate.append(stepdata[2])
+
 		generation += 1
 
-	return chromosome_translator(individual_em, tmax, *plist), dataindic['D_over_t'][0], min(energy_g), energymins, generation, ratio
+	return chromosome_translator(individual_em, tmax, *plist), dataindic['D_over_t'][0], min(energy_g), energymins, generation, ratio, animate
 
+
+
+
+rd = rawdata('input_GA.txt')
 
 data = []
-rd = rawdata('input_GA.txt')
 for i in rd[0][0]:
 	xs = []
 	ys = []
@@ -444,6 +466,7 @@ pipe_description = []
 for i,j in zip(rd[0][1], rd[5]):
 	pipe_description.append('D = {:.1f}, t = {:.1f}, σ/f ≈ {:.1f}'.format(i*rd[1], i, j))
 
+fig1 = plt.figure('fig1')
 ax1 = plt.subplot(321)
 ax1.axis('equal')
 ax1.set_title('Overlook View')
@@ -491,5 +514,43 @@ ax5 = plt.subplot(313)
 ax5.plot(gx, rd[3])
 plt.ylabel('Total Energy')
 plt.xlabel('Generation')
+
+
+joint_num = len(rd[6][0])
+joint_dic = {}
+for i in range(joint_num):
+	joint_dic[str(i)] = []
+
+for j in rd[6]:
+	for i in range(joint_num):
+		joint_dic[str(i)].append(j[i])
+
+joint_dic2 = {}
+for i, j in joint_dic.items():
+	xistep = []
+	yistep = []
+	zistep = []
+	for k in j:
+		xistep.append(k[0])
+		yistep.append(k[2])
+		zistep.append(k[1])
+	joint_dic2[i] = np.array([xistep, yistep, zistep])
+
+fig2 = plt.figure('Animation')
+ax = Axes3D(fig2)
+
+
+def update_lines(num, dataLines, lines):
+	for line, data in zip(lines, dataLines):
+		line.set_data(data[0:2, num-10:num])
+		line.set_3d_properties(data[2, num-10:num])
+	return lines
+
+marks = ['r^', 'bx', 'g*', 'yD', 'o']
+
+data = list(joint_dic2.values())
+lines = [ax.plot(dat[0], dat[1], dat[2], marker)[0] for dat, marker in zip(data, marks)]
+
+line_ani = FuncAnimation(fig2, update_lines, len(data[0][0]), fargs=(data, lines), interval=1, blit=True)
 
 plt.show()
