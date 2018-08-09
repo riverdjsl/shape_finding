@@ -15,10 +15,6 @@ def trans_comma_str(string):
 	return lst
 
 
-def geometry(P1, P2):
-	return np.array(P2)-np.array(P1)
-
-
 def NM(Nv, M0, lv):
 	l = np.sqrt(lv.dot(lv))
 	elv = lv/l
@@ -61,7 +57,7 @@ class Steel345():
 
 def mtgenerater(ts):
 	return [Steel345(ts[0]), Steel345(ts[1]), Steel345(ts[2])]
-			
+
 
 class Pipe():
 	def __init__(s, D, t):
@@ -80,7 +76,7 @@ class Pipe():
 
 	def i(s):
 		return np.sqrt((np.pi*(s.D/2)**3*s.t)/(np.pi*s.D*s.t))
-		
+
 
 def pipegenerater(ts, factor):
 	return [Pipe(ts[0]*factor, ts[0]), Pipe(ts[1]*factor, ts[1]), \
@@ -120,13 +116,14 @@ def check(ratio, Nv, Mv, lv, angle, u3, u2, E, f, W, I, A, i, r, t):
 	condition1 = abs(part4+part5)
 	condition2 = abs(part1+part2)
 	condition3 = abs(part1+part3)
-	if condition1 < ratio and condition2 < ratio and condition3 < ratio:
+	if (condition1 - ratio) <= 0.001 and condition2 < 1 and condition3 < 1:
 		return True
 	else:
 		return False
 
 
 def strainenergy(Nv, Mv, lv, angle, u3, u2, E, f, W, I, A, i, r, t):
+	'''pipe only'''
 	N = np.sqrt(Nv.dot(Nv))
 	M = np.sqrt(Mv.dot(Mv))
 	l = lv
@@ -157,29 +154,29 @@ def chromosome_generator(rdn):
 
 
 def DEC(bi):
-	
+
 	result = []
 	for i, j in enumerate(bi):
 		result.append(int(j)*2**i)
-	
+
 	return sum(result)
 
 
 def individual_generator(rdns):
-	
+
 	homo = []
 	for i in rdns:
 		homo.append(chromosome_generator(i))
-	
+
 	return tuple(homo)
 
-	
+
 def chromosome_translator(individual, tmax, A, B, C, D, Aa, Ba, Ca, Da, PC):
-		
+
 	def coord(chromosome, a, b):
 		return a+(b-a)*DEC(chromosome)/511
-		
-	yi = coord(individual[0], 0, min(A[1], B[1], C[1], D[1], Aa[1], Ba[1], Ca[1], Da[1]))
+
+	yi = coord(individual[0], 0, 1*min(A[1], B[1], C[1], D[1], Aa[1], Ba[1], Ca[1], Da[1]))
 	i = (PC[0], yi, 0)
 
 	xj = coord(individual[1], A[0], PC[0])
@@ -191,12 +188,12 @@ def chromosome_translator(individual, tmax, A, B, C, D, Aa, Ba, Ca, Da, PC):
 	yja = coord(individual[5], i[1], min(Aa[1], Ba[1]))
 	zja = coord(individual[6], 0, min(Aa[2], Ba[2]))
 	ja = (xja, yja, zja)
-	
+
 	xk = coord(individual[7], PC[0], D[0])
 	yk = coord(individual[8], i[1], min(C[1], D[1]))
 	zk = coord(individual[9], 0, max(C[2], D[2]))
 	k = (xk, yk, zk)
-	
+
 	xka = coord(individual[10], PC[0], Da[0])
 	yka = coord(individual[11], i[1], min(Ca[1], Da[1]))
 	zka = coord(individual[12], 0, min(Ca[2], Da[2]))
@@ -205,16 +202,52 @@ def chromosome_translator(individual, tmax, A, B, C, D, Aa, Ba, Ca, Da, PC):
 	t1 = coord(individual[13], 5, tmax[0])
 	t2 = coord(individual[14], 5, tmax[1])
 	t3 = coord(individual[15], 5, tmax[2])
-	
-	return ([A, j], [B, j], [C, k], [D, k], [Aa, ja], [Ba, ja], [Ca, ka], [Da, ka], [j, i], [k, i], [ja, i], [ka, i], [i, PC]), (t1, t2, t3)
+
+	return ([A, j], [B, j], [C, k], [D, k], [Aa, ja], [Ba, ja], [Ca, ka], [Da, ka], [j, i], [k, i], [ja, i], [ka, i], [i, PC]), (t1, t2, t3), (i, j, ja, k, ka)
 
 
 #sfitness points: the minimun value gets the highest point.
-def point(value, TF):
+def point1(value, TF, joints):
+	'''Freely grow with some constraint.'''
+	if TF is True:
+		geometry_TF = []
+		for i in joints[1:]:
+			'''if all moving points fall into a cone predefined, add more pts'''
+			geometry_TF.append((i[0]-joints[0][0])**2+\
+								(i[2]-joints[0][2])**2 <= \
+						((i[1]-joints[0][1])*np.tan(120*np.pi/360))**2)
+		if all(geometry_TF):
+			add_pt = 50
+		else:
+			add_pt = 0
+		return 19-9*value/5e7+add_pt
+	else:
+		return 0
+
+
+def point2(value, TF, joints):
+	'''Grow with no limits'''
 	if TF is True:
 		return 19-9*value/5e7
 	else:
 		return 0
+
+		
+def funcchoose(funclist):
+	for i, j in enumerate(funclist):
+		print('Method ', i, ':', j.__doc__)
+	while True:
+		try:
+			fn = input("Now choose one:")
+			for i, j in enumerate(funclist):
+				if i == int(fn):
+					return j, j.__doc__
+		except Exception:
+			continue
+
+f = [point1, point2]
+funcchosen = funcchoose(f)
+point = funcchosen[0]
 
 
 #selecting high points chromosomes
@@ -252,7 +285,7 @@ def mutation(chromosome):
 	chromosome_length = len(chromosome)
 	mutation_point = int(chromosome_length*np.random.rand())
 	chance = np.random.rand()
-	if chance >= 0.5:
+	if chance >= 0.3:
 		ch = list(chromosome)
 		for i, gene in enumerate(ch):
 			if  i == mutation_point:
@@ -262,24 +295,36 @@ def mutation(chromosome):
 		return chromosome
 
 
+def population_mutation(population):
+	if np.random.rand() >= 0.7:
+		mu_person_index = int(np.random.rand()*len(population))
+		mu_person = population.pop(mu_person_index)
+			
+		new_indi = []
+		for chromosome in mu_person:
+			new_indi.append(mutation(chromosome))
+		population.append(tuple(new_indi))
+	return population
+
+
 #reproduction
 def reproduction(parents, children_num=4):
-	
+
 	children = []
 	for i in range(children_num):
-		
+
 		embryo = []
 		for i, j in zip(parents[0], parents[1]):
 			embryo.append(genatic_exchange(i, j))
-	
+
 		child = []
 		for i in embryo:
 			child.append(mutation(i))
-		
+
 		children.append(tuple(child))
 
 	return children
-		
+
 
 def rawdata(filein):
 
@@ -300,23 +345,25 @@ def rawdata(filein):
 	forces = dataindic['forces']
 	ratio = dataindic['ratio']
 	tmax = dataindic['tmax']
-	
+
 	p_num = int(dataindic['population'][0])
 	g_num = int(dataindic['generation'][0])
-	
+
 	F_direction = np.array([0, -1, 0])
 
 	def energy(individual, F):
-		
-		candidate = chromosome_translator(individual, tmax, *plist)[0]
-		pipets = chromosome_translator(individual,  tmax, *plist)[1]
-		
+
+		individual_values = chromosome_translator(individual, tmax, *plist)
+		candidate = individual_values[0]
+		pipets = individual_values[1]
+		positions = individual_values[2]
+
 		material = mtgenerater(pipets)
 		pipes = pipegenerater(pipets, dataindic['D_over_t'][0])
-		
+
 		vars1, vars2, vars3 = (vars(i, j, k) \
 		for i, j, k in zip(pipes, material, mus))
-		
+
 		energyi = []
 		checks = []
 
@@ -345,35 +392,40 @@ def rawdata(filein):
 			checks.append(check(ratio[2], *j, **vars3))
 
 		energy = sum(energyi)
-		return energy, all(checks)
+		return energy, all(checks), positions
 
 	population = []	
 	for i in range(p_num):
 		population.append(individual_generator(np.random.rand(16)))
 
 	generation = 0
-	energy_g = list(map(energy, population, [forces]*len(population)))
-	
+#	energy_g = list(map(energy, population, [forces]*len(population)))
+
 	energymins = []
 	while generation <= g_num:
-		print(generation)
-		pts = [point(i, j) for i, j in energy_g]
-		print(pts)
+		print('\n\n\nGeneration {}.\n'.format(generation))
+		energy_g = list(map(energy, population, [forces]*len(population)))
+		pts = [point(i, j, k) for i, j, k in energy_g]
+		if generation > 0.1*g_num and abs(np.average(pts)-max(pts)) <= 0.01:
+			print("Ending the run 'cause convergence almost achieved!")
+			break
+		print('\n\n'.join(list('  '.join(list('{:>5.2f}'.format(i) for i in pts)[j: j+5]) for j in range(0, len(pts), 5))))
 		pama = select(population, pts)
 		kids = reproduction(pama)
 		e_kids = list(map(energy, kids, [forces]*len(kids)))
-		pts_k = [point(i, j) for i, j in e_kids]
+		pts_k = [point(i, j, k) for i, j, k in e_kids]
 		for i in sorted(pts[:])[:4]:
 			for j in pts_k[:]:
 				if j >= i:
 					population[pts.index(i)] = kids[pts_k.index(j)]
 					pts_k.pop(pts_k.index(j))
-		energy_g = list(map(energy, population, [forces]*len(population)))
+		if abs(np.average(pts)-max(pts)) > 1:
+			population = population_mutation(population)
 		energymins.append(min(energy_g)[0])
 		individual_em = population[energy_g.index(min(energy_g))]
 		generation += 1
 
-	return chromosome_translator(individual_em, tmax, *plist), dataindic['D_over_t'][0], min(energy_g), energymins, generation, 
+	return chromosome_translator(individual_em, tmax, *plist), dataindic['D_over_t'][0], min(energy_g), energymins, generation, ratio
 
 
 data = []
@@ -389,8 +441,8 @@ for i in rd[0][0]:
 	data.append([xs, ys, zs])
 
 pipe_description = []
-for i in rd[0][1]:
-	pipe_description.append('D = {:.1f}, t = {:.1f}'.format(i*rd[1], i))
+for i,j in zip(rd[0][1], rd[5]):
+	pipe_description.append('D = {:.1f}, t = {:.1f}, σ/f ≈ {:.1f}'.format(i*rd[1], i, j))
 
 ax1 = plt.subplot(321)
 ax1.axis('equal')
@@ -409,11 +461,11 @@ ax4 = plt.subplot(322)
 ax4.text(0.0, 0.6, 'The total energy:', fontsize=10)
 ax4.text(0.1, 0.5, int(rd[2][0]), fontsize=10, color='red')
 ax4.text(0.4, 0.6, 'The uper branches:', fontsize=10)
-ax4.text(0.5, 0.5, pipe_description[0], fontsize=10, color='blue')
+ax4.text(0.4, 0.5, pipe_description[0], fontsize=10, color='blue')
 ax4.text(0.4, 0.4, 'The middle branches:', fontsize=10)
-ax4.text(0.5, 0.3, pipe_description[1], fontsize=10, color='blue')
+ax4.text(0.4, 0.3, pipe_description[1], fontsize=10, color='blue')
 ax4.text(0.4, 0.2, 'The trunk:', fontsize=10)
-ax4.text(0.5, 0.1, pipe_description[2], fontsize=10, color='blue')
+ax4.text(0.4, 0.1, pipe_description[2], fontsize=10, color='blue')
 ax4.set_axis_off()
 
 for i in data:
@@ -441,6 +493,3 @@ plt.ylabel('Total Energy')
 plt.xlabel('Generation')
 
 plt.show()
-
-
-
