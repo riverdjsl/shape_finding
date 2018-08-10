@@ -483,7 +483,7 @@ ax3.axis('equal')
 ax3.set_title('Side View')
 plt.xlabel('Z')
 ax4 = plt.subplot(322)
-ax4.text(0.0, 0.6, 'The total volumn:', fontsize=10)
+ax4.text(0.0, 0.6, 'The total volume:', fontsize=10)
 ax4.text(0.1, 0.5, int(rd[2]), fontsize=10, color='red')
 ax4.text(0.4, 0.6, 'The uper branches:', fontsize=10)
 ax4.text(0.4, 0.5, pipe_description[0], fontsize=10, color='blue')
@@ -514,7 +514,7 @@ for i in data:
 gx = [i for i in range(rd[4])]
 ax5 = plt.subplot(313)
 ax5.plot(gx, rd[3])
-plt.ylabel('Volumn')
+plt.ylabel('Volume')
 plt.xlabel('Generation')
 
 
