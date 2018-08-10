@@ -433,7 +433,7 @@ def rawdata(filein):
 		if abs(np.average(pts)-max(pts)) > 1:
 			population = population_mutation(population)
 		else:
-			population = population_mutation(population, possibility=0.00)
+			population = population_mutation(population, possibility=0.05)
 
 		volumnmins.append(min(volumn_g)[1])
 		print('\nCurrent Volumn: {:.1f}.'.format(min(volumn_g)[1]))
