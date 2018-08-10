@@ -1,0 +1,255 @@
+
+
+ SAP2000 v15.1.0 Advanced C (Analysis Build 9024/32)
+ File: C:\Users\2017140\Desktop\新建文件夹 (2)\test.LOG
+
+
+
+
+ B E G I N   A N A L Y S I S                                2018/08/10  13:24:19
+
+
+ RUNNING ANALYSIS WITHIN THE GUI PROCESS
+ USING THE ADVANCED SOLVER (PROVIDES LIMITED INSTABILITY INFORMATION)
+
+ NUMBER OF JOINTS                          =          14
+    WITH RESTRAINTS                        =           1
+ NUMBER OF FRAME/CABLE/TENDON ELEMENTS     =          13
+ NUMBER OF LOAD PATTERNS                   =           3
+ NUMBER OF ACCELERATION LOADS              =           6
+ NUMBER OF LOAD CASES                      =           7
+
+
+ E L E M E N T   F O R M A T I O N                                      13:24:19
+
+
+
+ L I N E A R   E Q U A T I O N   S O L U T I O N                        13:24:19
+
+ FORMING STIFFNESS AT ZERO (UNSTRESSED) INITIAL CONDITIONS
+
+ TOTAL NUMBER OF EQUILIBRIUM EQUATIONS     =          78
+ NUMBER OF NON-ZERO STIFFNESS TERMS        =         705
+
+ NUMBER OF EIGENVALUES BELOW SHIFT         =           0
+
+
+ L I N E A R   S T A T I C   C A S E S                                  13:24:19
+
+ USING STIFFNESS AT ZERO (UNSTRESSED) INITIAL CONDITIONS
+
+ TOTAL NUMBER OF CASES TO SOLVE            =           3
+ NUMBER OF CASES TO SOLVE PER BLOCK        =           3
+
+ LINEAR STATIC CASES TO BE SOLVED:
+
+ CASE: DEAD
+ CASE: LIVE
+ CASE: BUCKLING-TRUNK-STATIC
+
+
+ L I N E A R   B U C K L I N G   A N A L Y S I S                        13:24:19
+
+ CASE: BUCKLING-TRUNK
+
+ USING STIFFNESS AT ZERO (UNSTRESSED) INITIAL CONDITIONS
+
+ NUMBER OF STIFFNESS DEGREES OF FREEDOM    =          78
+ NUMBER OF BUCKLING MODES SOUGHT           =          20
+ NUMBER OF SUBSPACE VECTORS USED           =          24
+
+ RELATIVE CONVERGENCE TOLERANCE            =    1.00E-09
+
+
+ Iteration  Approximations to next lowest eigenvalues...
+         1  5.536819296E+05  5.536819296E+05  7.422061607E+06  7.422061607E+06
+         2  5.536819296E+05  5.536819296E+05  7.422061607E+06  7.422061607E+06
+
+     Found mode       1 of      20,  Eigenvalue =   5.536819296E+05
+     Found mode       2 of      20,  Eigenvalue =   5.536819296E+05
+     Found mode       3 of      20,  Eigenvalue =   7.422061607E+06
+     Found mode       4 of      20,  Eigenvalue =   7.422061607E+06
+
+ * * * W A R N I N G * * *
+
+
+
+ NUMBER OF BUCKLING MODES FOUND            =           4
+ NUMBER OF ITERATIONS PERFORMED            =           2
+
+ * * * W A R N I N G * * *
+ FEWER BUCKLING MODES WERE FOUND THAN SOUGHT
+
+
+
+ E I G E N   M O D A L   A N A L Y S I S                                13:24:19
+
+ CASE: MODAL
+
+ USING STIFFNESS AT ZERO (UNSTRESSED) INITIAL CONDITIONS
+
+ NUMBER OF STIFFNESS DEGREES OF FREEDOM    =          78
+ NUMBER OF MASS DEGREES OF FREEDOM         =          39
+ MAXIMUM NUMBER OF EIGEN MODES SOUGHT      =          12
+ MINIMUM NUMBER OF EIGEN MODES SOUGHT      =           1
+ NUMBER OF RESIDUAL-MASS MODES SOUGHT      =           0
+ NUMBER OF SUBSPACE VECTORS USED           =          24
+ RELATIVE CONVERGENCE TOLERANCE            =    1.00E-09
+
+ FREQUENCY SHIFT  (CENTER) (CYC/TIME)      =     .000000
+ FREQUENCY CUTOFF (RADIUS) (CYC/TIME)      =  -INFINITY-
+ ALLOW AUTOMATIC FREQUENCY SHIFTING        =         YES
+
+
+ Original stiffness at shift : EV= 0.0000000E+00, f=     .000000, T=  -INFINITY-
+ Number of eigenvalues below shift =      0
+ Found mode      1 of     12:  EV= 9.2261938E+02, f=    4.834276, T=    0.206856
+ Found mode      2 of     12:  EV= 1.1993212E+03, f=    5.511729, T=    0.181431
+ Found mode      3 of     12:  EV= 1.5446946E+03, f=    6.255204, T=    0.159867
+ Found mode      4 of     12:  EV= 2.1772444E+03, f=    7.426321, T=    0.134656
+ Found mode      5 of     12:  EV= 2.4424288E+03, f=    7.865586, T=    0.127136
+ Found mode      6 of     12:  EV= 2.5487240E+03, f=    8.034920, T=    0.124457
+ Found mode      7 of     12:  EV= 2.6326554E+03, f=    8.166146, T=    0.122457
+ Found mode      8 of     12:  EV= 2.9470969E+03, f=    8.640072, T=    0.115740
+ Found mode      9 of     12:  EV= 5.5364437E+03, f=   11.842287, T=    0.084443
+ Found mode     10 of     12:  EV= 6.5571771E+03, f=   12.887794, T=    0.077593
+ Found mode     11 of     12:  EV= 9.0492854E+03, f=   15.140049, T=    0.066050
+ Found mode     12 of     12:  EV= 1.1927645E+04, f=   17.381909, T=    0.057531
+
+ NUMBER OF EIGEN MODES FOUND               =          12
+ NUMBER OF ITERATIONS PERFORMED            =           5
+ NUMBER OF STIFFNESS SHIFTS                =           0
+
+
+ N O N L I N E A R   S T A T I C   A N A L Y S I S                      13:24:19
+
+ CASE: DEAD-NONE
+ STARTING FROM ZERO (UNSTRESSED) INITIAL CONDITIONS
+ LOAD CONTROL TYPE                         =       FORCE
+ NUMBER OF STAGES                          =           0
+ TYPE OF GEOMETRIC NONLINEARITY            =        NONE
+ INCLUDE ELASTIC MATERIAL NONLINEARITY     =         YES
+ INCLUDE INELASTIC MATERIAL NONLINEARITY   =         YES
+ METHOD TO USE WHEN HINGES DROP LOAD       = UNLOAD ENTIRE STRUCTURE
+ SAVE POSITIVE INCREMENTS ONLY             =         YES
+ RELATIVE FORCE CONVERGENCE TOLERANCE      =    0.000100
+ RELATIVE EVENT TOLERANCE                  =    0.010000
+
+  Saved    Null   Total  Iteration   Relative  Curr Step   Curr Sum    Max Sum
+  Steps   Steps   Steps  this Step  Unbalance       Size   of Steps   of Steps
+ (    1      50     200      10/40   1.000000   1.000000   1.000000   1.000000)
+
+      0       0       1  Conv    1   1.43E-10   1.000000   1.000000   1.000000
+
+ TIME FOR INITIALIZING ANALYSIS            =        0.00
+ TIME FOR CONTROLLING ANALYSIS             =        0.00
+ TIME FOR UPDATING LOADS AND STATE         =        0.00
+ TIME FOR FORMING STIFFNESS MATRIX         =        0.00
+ TIME FOR SOLVING STIFFNESS MATRIX         =        0.01
+ TIME FOR CALCULATING DISPLACEMENTS        =        0.02
+ TIME FOR DETERMINING EVENTS               =        0.00
+ TIME FOR SAVING RESULTS                   =        0.00
+                                               ----------
+ TOTAL TIME FOR THIS ANALYSIS              =        0.03
+
+
+ E L E M E N T   F O R M A T I O N                                      13:24:19
+
+
+
+ L I N E A R   E Q U A T I O N   S O L U T I O N                        13:24:19
+
+ FORMING STIFFNESS AT THE END OF CASE: DEAD-NONE
+
+ TOTAL NUMBER OF EQUILIBRIUM EQUATIONS     =          78
+ NUMBER OF NON-ZERO STIFFNESS TERMS        =         705
+
+ NUMBER OF EIGENVALUES BELOW SHIFT         =           0
+
+
+ L I N E A R   B U C K L I N G   A N A L Y S I S                        13:24:19
+
+ CASE: BUCKLING
+
+ USING STIFFNESS AT THE END OF CASE: DEAD-NONE
+
+ NUMBER OF STIFFNESS DEGREES OF FREEDOM    =          78
+ NUMBER OF BUCKLING MODES SOUGHT           =          20
+ NUMBER OF SUBSPACE VECTORS USED           =          24
+
+ RELATIVE CONVERGENCE TOLERANCE            =    1.00E-09
+
+
+ Iteration  Approximations to next lowest eigenvalues...
+         1  4.469757177E+02  4.648972965E+02  5.922022028E+02  6.707741517E+02
+         2  4.087883901E+02  4.457977163E+02  5.588540483E+02  5.991947202E+02
+         3  4.086705847E+02  4.457493026E+02  5.586398839E+02  5.987867403E+02
+         4  4.086703888E+02  4.457492478E+02  5.586395368E+02  5.987856640E+02
+         5  4.086703885E+02  4.457492478E+02  5.586395361E+02  5.987856605E+02
+
+     Found mode       1 of      20,  Eigenvalue =   4.086703885E+02
+     Found mode       2 of      20,  Eigenvalue =   4.457492478E+02
+     Found mode       3 of      20,  Eigenvalue =   5.586395361E+02
+
+ Iteration  Approximations to next lowest eigenvalues...
+         5  5.987856605E+02  7.247339919E+02  7.359637151E+02  9.823555243E+02
+         6  5.987856605E+02  7.247339919E+02  7.359637150E+02  9.823555241E+02
+
+     Found mode       4 of      20,  Eigenvalue =   5.987856605E+02
+     Found mode       5 of      20,  Eigenvalue =   7.247339919E+02
+     Found mode       6 of      20,  Eigenvalue =   7.359637150E+02
+     Found mode       7 of      20,  Eigenvalue =   9.823555241E+02
+     Found mode       8 of      20,  Eigenvalue =   1.168461375E+03
+
+ Iteration  Approximations to next lowest eigenvalues...
+         6  1.319253150E+03  2.375154294E+03  2.600050503E+03  3.115743684E+03
+         7  1.319253150E+03  2.375154281E+03  2.600050227E+03  3.115741790E+03
+
+     Found mode       9 of      20,  Eigenvalue =   1.319253150E+03
+
+ Iteration  Approximations to next lowest eigenvalues...
+         7  2.375154281E+03  2.600050227E+03  3.115741790E+03  3.481021403E+03
+         8  2.375154280E+03  2.600050222E+03  3.115741754E+03  3.481021260E+03
+
+     Found mode      10 of      20,  Eigenvalue =   2.375154280E+03
+     Found mode      11 of      20,  Eigenvalue =   2.600050222E+03
+
+ Iteration  Approximations to next lowest eigenvalues...
+         8  3.115741754E+03  3.481021260E+03  3.603233300E+03  4.057353245E+03
+         9  3.115741753E+03  3.481021257E+03  3.603233299E+03  4.057353225E+03
+
+     Found mode      12 of      20,  Eigenvalue =   3.115741753E+03
+     Found mode      13 of      20,  Eigenvalue =   3.481021257E+03
+     Found mode      14 of      20,  Eigenvalue =   3.603233299E+03
+
+ Iteration  Approximations to next lowest eigenvalues...
+         9  4.057353225E+03  4.746718342E+03  5.964878067E+03  6.827285404E+03
+        10  4.057353225E+03  4.746718337E+03  5.964877770E+03  6.827277499E+03
+
+     Found mode      15 of      20,  Eigenvalue =   4.057353225E+03
+     Found mode      16 of      20,  Eigenvalue =   4.746718337E+03
+
+ Iteration  Approximations to next lowest eigenvalues...
+        10  5.964877770E+03  6.827277499E+03  7.864687685E+03  8.380352357E+03
+        11  5.964877767E+03  6.827277398E+03  7.864684190E+03  8.380351652E+03
+
+     Found mode      17 of      20,  Eigenvalue =   5.964877767E+03
+
+ Iteration  Approximations to next lowest eigenvalues...
+        11  6.827277398E+03  7.864684190E+03  8.380351652E+03  8.925952105E+03
+        12  6.827277397E+03  7.864684135E+03  8.380351640E+03  8.925952098E+03
+
+     Found mode      18 of      20,  Eigenvalue =   6.827277397E+03
+
+ Iteration  Approximations to next lowest eigenvalues...
+        12  7.864684135E+03  8.380351640E+03  8.925952098E+03  1.052950436E+04
+        13  7.864684135E+03  8.380351640E+03  8.925952098E+03  1.052950428E+04
+
+     Found mode      19 of      20,  Eigenvalue =   7.864684135E+03
+     Found mode      20 of      20,  Eigenvalue =   8.380351640E+03
+
+ NUMBER OF BUCKLING MODES FOUND            =          20
+ NUMBER OF ITERATIONS PERFORMED            =          13
+
+
+ A N A L Y S I S   C O M P L E T E                          2018/08/10  13:24:19

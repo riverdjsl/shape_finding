@@ -1,0 +1,30 @@
+ SAP2000 v15.1.0 Advanced C (Analysis Build 9024/32)                            
+ File: C:\Users\2017140\Desktop\新建文件夹 (2)\test.OUT                         
+                                                                     
+                                                                       
+
+ D I S P L A C E M E N T   D E G R E E S   O F   F R E E D O M
+
+         (A) = Active DOF, equilibrium equation
+         (-) = Restrained DOF, reaction computed
+         (+) = Constrained DOF
+         (>) = External substructure DOF
+         ( ) = Null DOF
+
+  JOINTS              UX  UY  UZ  RX  RY  RZ
+       1 TO       6    A   A   A   A   A   A
+       7               -   -   -   -   -   -
+       8 TO      16    A   A   A   A   A   A
+
+ D I S P L A C E M E N T   D E G R E E S   O F   F R E E D O M
+
+         (A) = Active DOF, equilibrium equation
+         (-) = Restrained DOF, reaction computed
+         (+) = Constrained DOF
+         (>) = External substructure DOF
+         ( ) = Null DOF
+
+  JOINTS              UX  UY  UZ  RX  RY  RZ
+       1 TO       6    A   A   A   A   A   A
+       7               -   -   -   -   -   -
+       8 TO      16    A   A   A   A   A   A
