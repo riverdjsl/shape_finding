@@ -206,37 +206,13 @@ def chromosome_translator(individual, tmax, A, B, C, D, Aa, Ba, Ca, Da, PC):
 	ka = (xka, yka, zka)
 
 	t1 = coord(individual[13], 5, tmax[0])
-	t2 = coord(individual[14], 5, tmax[1])
-	t3 = coord(individual[15], 10, tmax[2])
+	t2 = coord(individual[14], 10, tmax[1])
+	t3 = coord(individual[15], 15, tmax[2])
 
 	return ([A, j], [B, j], [C, k], [D, k], [Aa, ja], [Ba, ja], [Ca, ka], [Da, ka], [j, i], [k, i], [ja, i], [ka, i], [i, PC]), (t1, t2, t3), (i, j, ja, k, ka)
 
 
-#sfitness points: the minimun value gets the highest point.
-'''
-def point1(value, TF, joints):
-	if TF is True:
-		geometry_TF = []
-		for i in joints[1:]:
-			geometry_TF.append((i[0]-joints[0][0])**2+\
-								(i[2]-joints[0][2])**2 <= \
-						((i[1]-joints[0][1])*np.tan(120*np.pi/360))**2)
-		if all(geometry_TF):
-			add_pt = 50
-		else:
-			add_pt = 0
-		return 19-9*value/5e7+add_pt
-	else:
-		return 0
-
-
-def point2(value, TF, joints):
-	if TF is True:
-		return 19-9*value/5e7
-	else:
-		return 0
-'''		
-		
+#sfitness points: the minimun value gets the highest point.	
 def point1(rou, v, TF):
 	'''Fitness based on total volumns!'''
 	if TF is True:
