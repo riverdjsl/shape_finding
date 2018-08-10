@@ -1,4 +1,4 @@
-import numpy as np
+﻿import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from mpl_toolkits.mplot3d import Axes3D
@@ -135,7 +135,11 @@ def strainenergy(Nv, Mv, lv, angle, u3, u2, E, f, W, I, A, i, r, t):
 	part2 = (N*j)**2*(l*r)**3*t*np.pi/(6*E*I**2)
 	part3 = M**2*r**3*t*l*np.pi/(2*E*I**2)
 	part4 = N*j*M*l**2*r**3*t*np.pi/(2*E*I**2)
-	return part1+(part2+part3+part4)
+	
+	Total_energy = part1+(part2+part3+part4)
+	Volumn = A*l
+
+	return Total_energy, Volumn
 
 
 def vars(pp, mt, mu):
@@ -203,18 +207,17 @@ def chromosome_translator(individual, tmax, A, B, C, D, Aa, Ba, Ca, Da, PC):
 
 	t1 = coord(individual[13], 5, tmax[0])
 	t2 = coord(individual[14], 5, tmax[1])
-	t3 = coord(individual[15], 5, tmax[2])
+	t3 = coord(individual[15], 10, tmax[2])
 
 	return ([A, j], [B, j], [C, k], [D, k], [Aa, ja], [Ba, ja], [Ca, ka], [Da, ka], [j, i], [k, i], [ja, i], [ka, i], [i, PC]), (t1, t2, t3), (i, j, ja, k, ka)
 
 
 #sfitness points: the minimun value gets the highest point.
+'''
 def point1(value, TF, joints):
-	'''Freely grow with some constraint.'''
 	if TF is True:
 		geometry_TF = []
 		for i in joints[1:]:
-			'''if all moving points fall into a cone predefined, add more pts'''
 			geometry_TF.append((i[0]-joints[0][0])**2+\
 								(i[2]-joints[0][2])**2 <= \
 						((i[1]-joints[0][1])*np.tan(120*np.pi/360))**2)
@@ -228,9 +231,24 @@ def point1(value, TF, joints):
 
 
 def point2(value, TF, joints):
-	'''Grow with no limits'''
 	if TF is True:
 		return 19-9*value/5e7
+	else:
+		return 0
+'''		
+		
+def point1(rou, v, TF):
+	'''Fitness based on total volumns!'''
+	if TF is True:
+		return 5-v/1e9
+	else:
+		return 0
+
+
+def point2(rou, v, TF):
+	'''Fitness based on energy density.'''
+	if TF is True:
+		return rou
 	else:
 		return 0
 
@@ -367,6 +385,7 @@ def rawdata(filein):
 		for i, j, k in zip(pipes, material, mus))
 
 		energyi = []
+		volumni = []
 		checks = []
 
 		dic1 = {}
@@ -384,17 +403,23 @@ def rawdata(filein):
 		dic3[12] = NM(sum(F)*F_direction, dic2[8][1]+dic2[9][1]+dic2[10][1]+dic2[11][1], np.array(candidate[12][0])-np.array(candidate[12][1]))
 
 		for i, j in dic1.items():
-			energyi.append(strainenergy(*j, **vars1))
+			energyi.append(strainenergy(*j, **vars1)[0])
+			volumni.append(strainenergy(*j, **vars1)[1])
 			checks.append(check(ratio[0], *j, **vars1))
 		for i, j in dic2.items():
-			energyi.append(strainenergy(*j, **vars2))
+			energyi.append(strainenergy(*j, **vars2)[0])
+			volumni.append(strainenergy(*j, **vars1)[1])
 			checks.append(check(ratio[1], *j, **vars2))
 		for i, j in dic3.items():
-			energyi.append(strainenergy(*j, **vars3))
+			energyi.append(strainenergy(*j, **vars3)[0])
+			volumni.append(strainenergy(*j, **vars1)[1])
 			checks.append(check(ratio[2], *j, **vars3))
 
 		energy = sum(energyi)
-		return energy, all(checks), positions
+		volumn = sum(volumni)
+		density = energy/volumn
+		
+		return density, volumn, all(checks)
 
 	population = []
 	for i in range(p_num):
@@ -404,13 +429,13 @@ def rawdata(filein):
 #	energy_g = list(map(energy, population, [forces]*len(population)))
 
 	animate = []
-	energymins = []
+	volumnmins = []
 	while generation <= g_num:
 
 		print('\n\n\nGeneration {}.\n'.format(generation))
 
-		energy_g = list(map(energy, population, [forces]*len(population)))
-		pts = [point(i, j, k) for i, j, k in energy_g]
+		volumn_g = list(map(energy, population, [forces]*len(population)))
+		pts = [point(i, j, k) for i, j, k in volumn_g]
 
 		if generation > 0.6*g_num and abs(np.average(pts)-max(pts)) <= 0.005:
 			print("Ending the run 'cause convergence almost achieved!")
@@ -420,8 +445,8 @@ def rawdata(filein):
 
 		pama = select(population, pts)
 		kids = reproduction(pama)
-		e_kids = list(map(energy, kids, [forces]*len(kids)))
-		pts_k = [point(i, j, k) for i, j, k in e_kids]
+		v_kids = list(map(energy, kids, [forces]*len(kids)))
+		pts_k = [point(i, j, k) for i, j, k in v_kids]
 
 		for i in sorted(pts[:])[:4]:
 			for j in pts_k[:]:
@@ -434,8 +459,9 @@ def rawdata(filein):
 		else:
 			population = population_mutation(population, possibility=0.00)
 
-		energymins.append(min(energy_g)[0])
-		individual_em = population[energy_g.index(min(energy_g))]
+		volumnmins.append(min(volumn_g)[1])
+		print('\nCurrent Volumn: {:.1f}.'.format(min(volumn_g)[1]))
+		individual_em = population[volumn_g.index(min(volumn_g))]
 
 		animate_i = [[]]*5
 		if generation%1 == 0:
@@ -444,7 +470,7 @@ def rawdata(filein):
 
 		generation += 1
 
-	return chromosome_translator(individual_em, tmax, *plist), dataindic['D_over_t'][0], min(energy_g), energymins, generation, ratio, animate
+	return chromosome_translator(individual_em, tmax, *plist), dataindic['D_over_t'][0], min(volumn_g)[1], volumnmins, generation, ratio, animate
 
 
 
@@ -481,8 +507,8 @@ ax3.axis('equal')
 ax3.set_title('Side View')
 plt.xlabel('Z')
 ax4 = plt.subplot(322)
-ax4.text(0.0, 0.6, 'The total energy:', fontsize=10)
-ax4.text(0.1, 0.5, int(rd[2][0]), fontsize=10, color='red')
+ax4.text(0.0, 0.6, 'The total volumn:', fontsize=10)
+ax4.text(0.1, 0.5, int(rd[2]), fontsize=10, color='red')
 ax4.text(0.4, 0.6, 'The uper branches:', fontsize=10)
 ax4.text(0.4, 0.5, pipe_description[0], fontsize=10, color='blue')
 ax4.text(0.4, 0.4, 'The middle branches:', fontsize=10)
@@ -512,7 +538,7 @@ for i in data:
 gx = [i for i in range(rd[4])]
 ax5 = plt.subplot(313)
 ax5.plot(gx, rd[3])
-plt.ylabel('Total Energy')
+plt.ylabel('Volumn')
 plt.xlabel('Generation')
 
 
@@ -542,8 +568,8 @@ ax = Axes3D(fig2)
 
 def update_lines(num, dataLines, lines):
 	for line, data in zip(lines, dataLines):
-		line.set_data(data[0:2, num-10:num])
-		line.set_3d_properties(data[2, num-10:num])
+		line.set_data(data[0:2, num-50:num])
+		line.set_3d_properties(data[2, num-50:num])
 	return lines
 
 marks = ['r^', 'bx', 'g*', 'yD', 'o']
