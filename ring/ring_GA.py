@@ -1,7 +1,6 @@
 ﻿import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.animation import FuncAnimation
-from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.gridspec import GridSpec
 
 def trans_comma_str(string):
 	'''to transform comma strings into lists of numbers'''
@@ -94,8 +93,8 @@ def fi(lambdai, f, E):
 		np.sqrt((alpha2+alpha3*lambdan+lambdan**2)**2-4*lambdan**2))\
 		/(2*lambdan**2)
 
-
-def check(ratio, N, l, u3, u2, E, f, W, I, A, i, r, t):
+'''
+def check1(ratio, N, l, u3, u2, E, f, W, I, A, i, r, t):
 
 	lambdax = u3*l/i
 	lambday = u2*l/i
@@ -114,7 +113,32 @@ def check(ratio, N, l, u3, u2, E, f, W, I, A, i, r, t):
 	condition1 = abs(part4)
 	condition2 = abs(part1)
 	
-	if condition1 <= ratio and condition2 <= ratio:
+	if abs(condition1 - ratio) <= 0.05 and condition2 <= 1:
+		return True
+	else:
+		return False
+'''		
+
+def check2(ratio, N, l, u3, u2, E, f, W, I, A, i, r, t):
+
+	lambdax = u3*l/i
+	lambday = u2*l/i
+	
+	if lambdax < 0.1:
+		Nex = 99999
+		fix = 1.0
+		fiy = 1.0
+	else:
+		Nex = np.pi**2*E*I/(1.1*lambdax**2)
+		fix = fi(lambdax, f, E)
+		fiy = fi(lambday, f, E)
+	
+	part1 = N/(min(fix, fiy)*A*f)
+	part4 = N/(A*f)
+	condition1 = abs(part4)
+	condition2 = abs(part1)
+	
+	if condition1 <= ratio and condition2 <= 1 and max(lambdax, lambday) <= 120*np.sqrt(235/345):
 		return True
 	else:
 		return False
@@ -162,12 +186,12 @@ def individual_generator(rdns):
 	return tuple(homo)
 
 
-def chromosome_translator(individual, tmax, A, B, PC):
+def chromosome_translator(individual, tmax, start_elev, A, B, PC):
 
 	def coord(chromosome, a, b):
 		return a+(b-a)*DEC(chromosome)/511
 
-	yi = coord(individual[0], 0, A[1])
+	yi = coord(individual[0], start_elev, A[1])
 	i = (PC[0], yi)
 
 	xj = coord(individual[1], A[0], PC[0])
@@ -177,22 +201,22 @@ def chromosome_translator(individual, tmax, A, B, PC):
 	t1 = coord(individual[3], 5, tmax[0])
 	t2 = 2*t1
 
-	return ([A, j], [B, j], [j, i], [i, PC]), (t1, t2), (i, j)
+	return ([A, j], [B, j], [j, i], [i, PC], [A, B]), (t1, t2), (i, j)
 
 
 #sfitness points: the minimun value gets the highest point.	
-def point1(rou, v, TF):
+def point1(v, rou, TF):
 	'''Fitness based on total volumes!'''
 	if TF is True:
-		return 5-v/1e9
+		return 5-v/1e8
 	else:
 		return 0
 
 
-def point2(rou, v, TF):
+def point2(v, rou, TF):
 	'''Fitness based on energy density.'''
 	if TF is True:
-		return rou
+		return rou*100
 	else:
 		return 0
 
@@ -309,15 +333,15 @@ def rawdata(filein):
 	forces = dataindic['forces']
 	ratio = dataindic['ratio']
 	tmax = dataindic['tmax']
+	
+	start_elev = dataindic['starting_elevation'][0]
 
 	p_num = int(dataindic['population'][0])
 	g_num = int(dataindic['generation'][0])
 
-	F_direction = np.array([0, -1, 0])
-
 	def energy(individual, F):
 
-		individual_values = chromosome_translator(individual, tmax, *plist)
+		individual_values = chromosome_translator(individual, tmax, start_elev, *plist)
 		candidate = individual_values[0]
 		pipets = individual_values[1]
 		positions = individual_values[2]
@@ -331,55 +355,78 @@ def rawdata(filein):
 		energyi = []
 		volumei = []
 		checks = []
-
-		dic1 = {}
-		for j, k in zip(range(8), F):
-			a = NM(k*F_direction, np.zeros(3), np.array(candidate[j][0])-np.array(candidate[j][1]))
-			dic1[j] = a
-
-		dic2 = {}
-		dic2[8] = NM((F[0]+F[1])*F_direction, dic1[0][1]+dic1[1][1], np.array(candidate[8][0])-np.array(candidate[8][1]))
-		dic2[10] = NM((F[4]+F[5])*F_direction, dic1[4][1]+dic1[5][1], np.array(candidate[10][0])-np.array(candidate[10][1]))
-		dic2[9] = NM((F[2]+F[3])*F_direction, dic1[2][1]+dic1[3][1], np.array(candidate[9][0])-np.array(candidate[9][1]))
-		dic2[11] = NM((F[6]+F[7])*F_direction, dic1[6][1]+dic1[7][1], np.array(candidate[11][0])-np.array(candidate[11][1]))
-
-		dic3 = {}
-		dic3[12] = NM(sum(F)*F_direction, dic2[8][1]+dic2[9][1]+dic2[10][1]+dic2[11][1], np.array(candidate[12][0])-np.array(candidate[12][1]))
-
+		
+		def geo(line):
+			'''
+			line is [(x1, y1), (x2, y2)]
+			'''
+			dx = abs(line[0][0]-line[1][0])
+			dy = abs(line[0][1]-line[1][1])
+			try:
+				ang = np.arctan(dx/dy)
+			except ZeroDivisionError:
+				ang = np.pi/4
+			l = np.sqrt(dx**2+dy**2)
+			return ang, l
+		
+		angs = []
+		ls = []	
+		for i in candidate:
+			angs.append(geo(i)[0])
+			ls.append(geo(i)[1])
+		
+		def solver(angs, ls, q):
+			'''
+			angs is [alpha, beta, gamma]
+			ls is [ljA, ljB, lij, loi, lAB]
+			q is [q]
+			return (NjA, NjB, Nij, Noi)
+			'''
+			Rcy = q[0]*ls[4]
+			Rcx = Rcy*np.tan(angs[2])
+			A = np.array([[np.cos(np.pi/2-angs[0]), -np.cos(np.pi/2-angs[1])], \
+						[np.sin(np.pi/2-angs[0]), np.sin(np.pi/2-angs[1])]])
+			B = np.array([Rcx, Rcy])
+			C = np.linalg.solve(A, B)
+			dic1 = {'jA': (C[0], ls[0]), 'jB': (C[1], ls[1]), 'ij': (Rcy/np.cos(angs[2]), ls[2])}
+			dic2 = {'oi': (2*Rcy, ls[3])}
+			shear1 = C[0]*np.cos(angs[0])
+			shear2 = C[1]*np.cos(angs[1])
+			return dic1, dic2, [shear1, shear2]
+			
+		dic1 = solver(angs, ls, forces)[0]
+		dic2 = solver(angs, ls, forces)[1]
+		shears = solver(angs, ls, forces)[2]
+		
 		for i, j in dic1.items():
 			energyi.append(strainenergy(*j, **vars1)[0])
-			volumni.append(strainenergy(*j, **vars1)[1])
-			checks.append(check(ratio[0], *j, **vars1))
+			volumei.append(strainenergy(*j, **vars1)[1])
+			checks.append(check2(ratio[0], *j, **vars1))
 		for i, j in dic2.items():
 			energyi.append(strainenergy(*j, **vars2)[0])
-			volumni.append(strainenergy(*j, **vars1)[1])
-			checks.append(check(ratio[1], *j, **vars2))
-		for i, j in dic3.items():
-			energyi.append(strainenergy(*j, **vars3)[0])
-			volumni.append(strainenergy(*j, **vars1)[1])
-			checks.append(check(ratio[2], *j, **vars3))
+			volumei.append(strainenergy(*j, **vars2)[1])
+			checks.append(check2(ratio[0], *j, **vars2))
 
 		energy = sum(energyi)
-		volumn = sum(volumni)
-		density = energy/volumn
+		volume = sum(volumei)
+		density = energy/volume
 		
-		return density, volumn, all(checks)
+		return volume, density, all(checks), shears
 
 	population = []
 	for i in range(p_num):
-		population.append(individual_generator(np.random.rand(16)))
+		population.append(individual_generator(np.random.rand(4)))
 
 	generation = 0
 #	energy_g = list(map(energy, population, [forces]*len(population)))
 
-	animate = []
-	volumnmins = []
+	volumemins = []
 	while generation <= g_num:
 
 		print('\n\n\nGeneration {}.\n'.format(generation))
 
-		volumn_g = list(map(energy, population, [forces]*len(population)))
-		pts = [point(i, j, k) for i, j, k in volumn_g]
+		volume_g = list(map(energy, population, [forces]*len(population)))
+		pts = [point(i, j, k) for i, j, k, ii in volume_g]
 
 		if generation > 0.6*g_num and abs(np.average(pts)-max(pts)) <= 0.005:
 			print("Ending the run 'cause convergence almost achieved!")
@@ -390,7 +437,7 @@ def rawdata(filein):
 		pama = select(population, pts)
 		kids = reproduction(pama)
 		v_kids = list(map(energy, kids, [forces]*len(kids)))
-		pts_k = [point(i, j, k) for i, j, k in v_kids]
+		pts_k = [point(i, j, k) for i, j, k, ii in v_kids]
 
 		for i in sorted(pts[:])[:4]:
 			for j in pts_k[:]:
@@ -401,126 +448,82 @@ def rawdata(filein):
 		if abs(np.average(pts)-max(pts)) > 1:
 			population = population_mutation(population)
 		else:
-			population = population_mutation(population, possibility=0.05)
+			population = population_mutation(population, possibility = 0.05)
 
-		volumnmins.append(min(volumn_g)[1])
-		print('\nCurrent Volumn: {:.1f}.'.format(min(volumn_g)[1]))
-		individual_em = population[volumn_g.index(min(volumn_g))]
-
-		animate_i = [[]]*5
-		if generation%1 == 0:
-			stepdata = chromosome_translator(individual_em, tmax, *plist)
-			animate.append(stepdata[2])
+		volumemins.append(min(volume_g)[0])
+		print('\nCurrent Volumn: {:.1f}.'.format(min(volume_g)[0]))
+		individual_em = population[volume_g.index(min(volume_g))]
+		shearforces = min(volume_g)[3]
 
 		generation += 1
 
-	return chromosome_translator(individual_em, tmax, *plist), dataindic['D_over_t'][0], min(volumn_g)[1], volumnmins, generation, ratio, animate
+	return chromosome_translator(individual_em, tmax, start_elev, *plist), dataindic['D_over_t'][0], min(volume_g)[0], volumemins, generation, shearforces
 
 
 
 
-rd = rawdata('input_GA.txt')
+rd = rawdata('ring_GA.txt')
 
 data = []
-for i in rd[0][0]:
+for i in rd[0][0][:-1]:
 	xs = []
 	ys = []
-	zs = []
 	for j in i:
 		xs.append(j[0])
 		ys.append(j[1])
-		zs.append(j[2])
-	data.append([xs, ys, zs])
+	data.append([xs, ys])
+	
+for i in rd[0][0][:-2]:
+	xs = []
+	ys = []
+	for j in i:
+		xs.append(-j[0])
+		ys.append(j[1])
+	data.append([xs, ys])
+
 
 pipe_description = []
-for i,j in zip(rd[0][1], rd[5]):
-	pipe_description.append('D = {:.1f}, t = {:.1f}, σ/f ≈ {:.1f}'.format(i*rd[1], i, j))
+for i in rd[0][1]:
+	pipe_description.append('D = {:.1f}, t = {:.1f}'.format(i*rd[1], i))
+
+shear_forces_description = []
+for i, j in zip(rd[5], ['A', 'B']):
+	shear_forces_description.append('V{} = {:.1f}'.format(j, i/1000))
 
 fig1 = plt.figure('fig1')
-ax1 = plt.subplot(321)
+gs = GridSpec(3, 3)
+
+
+ax1 = plt.subplot(plt.subplot(gs[0:-1, 0:-1]))
 ax1.axis('equal')
-ax1.set_title('Overlook View')
-plt.ylabel('Z')
-ax2 = plt.subplot(323)
-ax2.axis('equal')
-ax2.set_title('Front View')
-plt.ylabel('Y')
-plt.xlabel('X')
-ax3 = plt.subplot(324)
-ax3.axis('equal')
-ax3.set_title('Side View')
-plt.xlabel('Z')
-ax4 = plt.subplot(322)
+
+
+ax4 = plt.subplot(plt.subplot(gs[0:-1, 2]))
 ax4.text(0.0, 0.6, 'The total volume:', fontsize=10)
 ax4.text(0.1, 0.5, int(rd[2]), fontsize=10, color='red')
+
+ax4.text(0.0, 0.3, shear_forces_description[0], fontsize=10)
+ax4.text(0.0, 0.2, shear_forces_description[1], fontsize=10)
+
 ax4.text(0.4, 0.6, 'The uper branches:', fontsize=10)
 ax4.text(0.4, 0.5, pipe_description[0], fontsize=10, color='blue')
-ax4.text(0.4, 0.4, 'The middle branches:', fontsize=10)
+ax4.text(0.4, 0.4, 'The trunk:', fontsize=10)
 ax4.text(0.4, 0.3, pipe_description[1], fontsize=10, color='blue')
-ax4.text(0.4, 0.2, 'The trunk:', fontsize=10)
-ax4.text(0.4, 0.1, pipe_description[2], fontsize=10, color='blue')
+
 ax4.set_axis_off()
 
 for i in data:
-	ax1.plot(*i[0:3:2])
-	ax2.plot(*i[:2])
-	ax3.plot(*i[::-1][:2])
-
-	ax1.plot(*i[0:3:2], 'bo')
-	for a, b in zip(*i[0:3:2]):
+	ax1.plot(*i)
+	ax1.plot(*i, 'bo')
+	for a, b in zip(*i):
 		a, b = int(a), int(b)
 		ax1.text(a, b, (a, b), ha='center', va='bottom', fontsize=10)
-	ax2.plot(*i[:2], 'bo')
-	for c, d in zip(*i[:2]):
-		c, d = int(c), int(d)
-		ax2.text(c, d, (c, d), ha='center', va='bottom', fontsize=10)
-	ax3.plot(*i[::-1][:2], 'bo')
-	for e, f in zip(*i[::-1][:2]):
-		e, f = int(e), int(f)
-		ax3.text(e, f, (e, f), ha='center', va='bottom', fontsize=10)
+
 
 gx = [i for i in range(rd[4])]
-ax5 = plt.subplot(313)
+ax5 = plt.subplot(plt.subplot(gs[2, :]))
 ax5.plot(gx, rd[3])
 plt.ylabel('Volume')
 plt.xlabel('Generation')
-
-
-joint_num = len(rd[6][0])
-joint_dic = {}
-for i in range(joint_num):
-	joint_dic[str(i)] = []
-
-for j in rd[6]:
-	for i in range(joint_num):
-		joint_dic[str(i)].append(j[i])
-
-joint_dic2 = {}
-for i, j in joint_dic.items():
-	xistep = []
-	yistep = []
-	zistep = []
-	for k in j:
-		xistep.append(k[0])
-		yistep.append(k[2])
-		zistep.append(k[1])
-	joint_dic2[i] = np.array([xistep, yistep, zistep])
-
-fig2 = plt.figure('Animation')
-ax = Axes3D(fig2)
-
-
-def update_lines(num, dataLines, lines):
-	for line, data in zip(lines, dataLines):
-		line.set_data(data[0:2, num-50:num])
-		line.set_3d_properties(data[2, num-50:num])
-	return lines
-
-marks = ['r^', 'bx', 'g*', 'yD', 'o']
-
-data = list(joint_dic2.values())
-lines = [ax.plot(dat[0], dat[1], dat[2], marker)[0] for dat, marker in zip(data, marks)]
-
-line_ani = FuncAnimation(fig2, update_lines, len(data[0][0]), fargs=(data, lines), interval=1, blit=True)
 
 plt.show()
