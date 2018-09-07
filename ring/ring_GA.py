@@ -501,15 +501,15 @@ with plt.xkcd():
 
 	ax4 = plt.subplot(plt.subplot(gs[0:-1, 2]))
 	ax4.text(0.0, 0.6, 'The total volume:', fontsize=10)
-	ax4.text(0.1, 0.5, int(rd[2]), fontsize=10, color='red')
+	ax4.text(0.1, 0.5, int(rd[2]), fontsize=20, color='red')
 
-	ax4.text(0.0, 0.3, shear_forces_description[0], fontsize=10)
-	ax4.text(0.0, 0.2, shear_forces_description[1], fontsize=10)
+	ax4.text(0.0, 0.05, shear_forces_description[0], fontsize=10)
+	ax4.text(0.0, 0.0, shear_forces_description[1], fontsize=10)
 
-	ax4.text(0.4, 0.6, 'The uper branches:', fontsize=10)
-	ax4.text(0.4, 0.5, pipe_description[0], fontsize=10, color='blue')
-	ax4.text(0.4, 0.4, 'The trunk:', fontsize=10)
-	ax4.text(0.4, 0.3, pipe_description[1], fontsize=10, color='blue')
+	ax4.text(0.6, 0.6, 'The uper branches:', fontsize=10)
+	ax4.text(0.6, 0.55, pipe_description[0], fontsize=10, color='blue')
+	ax4.text(0.6, 0.4, 'The trunk:', fontsize=10)
+	ax4.text(0.6, 0.35, pipe_description[1], fontsize=10, color='blue')
 
 	ax4.set_axis_off()
 
