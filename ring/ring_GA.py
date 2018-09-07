@@ -454,7 +454,6 @@ for i in rd[0][0][:-2]:
 		ys.append(j[1])
 	data.append([xs, ys])
 
-
 pipe_description = []
 for i in rd[0][1]:
 	pipe_description.append('D = {:.1f}, t = {:.1f}'.format(i*rd[1], i))
@@ -474,9 +473,6 @@ with plt.xkcd():
 	ax4.text(0.0, 0.6, 'The total volume:', fontsize=10)
 	ax4.text(0.1, 0.5, int(rd[2]), fontsize=20, color='red')
 
-	ax4.text(0.0, 0.05, shear_forces_description[0], fontsize=10)
-	ax4.text(0.0, 0.0, shear_forces_description[1], fontsize=10)
-
 	ax4.text(0.6, 0.6, 'The uper branches:', fontsize=10)
 	ax4.text(0.6, 0.55, pipe_description[0], fontsize=10, color='blue')
 	ax4.text(0.6, 0.4, 'The trunk:', fontsize=10)
@@ -489,7 +485,10 @@ with plt.xkcd():
 		ax1.plot(*i, 'bo')
 		for a, b in zip(*i):
 			a, b = int(a), int(b)
-			ax1.text(a, b, (a, b), ha='center', va='bottom', fontsize=10)
+			ax1.text(a, b, (a, b), ha='center', va='bottom', fontsize=8)
+	
+	ax1.text(data[0][0][0], data[0][1][0], shear_forces_description[0], ha='center', va='top', fontsize=8, color='red')
+	ax1.text(data[1][0][0], data[1][1][0], shear_forces_description[1], ha='center', va='top', fontsize=8, color='red')
 
 	gx = [i for i in range(rd[4])]
 	ax5 = plt.subplot(plt.subplot(gs[2, :]))
