@@ -92,32 +92,7 @@ def fi(lambdai, f, E):
 		return ((alpha2+alpha3*lambdan+lambdan**2)-\
 		np.sqrt((alpha2+alpha3*lambdan+lambdan**2)**2-4*lambdan**2))\
 		/(2*lambdan**2)
-
-'''
-def check1(ratio, N, l, u3, u2, E, f, W, I, A, i, r, t):
-
-	lambdax = u3*l/i
-	lambday = u2*l/i
 	
-	if lambdax < 0.1:
-		Nex = 99999
-		fix = 1.0
-		fiy = 1.0
-	else:
-		Nex = np.pi**2*E*I/(1.1*lambdax**2)
-		fix = fi(lambdax, f, E)
-		fiy = fi(lambday, f, E)
-	
-	part1 = N/(min(fix, fiy)*A*f)
-	part4 = N/(A*f)
-	condition1 = abs(part4)
-	condition2 = abs(part1)
-	
-	if abs(condition1 - ratio) <= 0.05 and condition2 <= 1:
-		return True
-	else:
-		return False
-'''		
 
 def check2(ratio, N, l, u3, u2, E, f, W, I, A, i, r, t):
 
@@ -460,8 +435,6 @@ def rawdata(filein):
 	return chromosome_translator(individual_em, tmax, start_elev, *plist), dataindic['D_over_t'][0], min(volume_g)[0], volumemins, generation, shearforces
 
 
-
-
 rd = rawdata('ring_GA.txt')
 
 data = []
@@ -494,10 +467,8 @@ with plt.xkcd():
 	fig1 = plt.figure('fig1')
 	gs = GridSpec(3, 3)
 
-
 	ax1 = plt.subplot(plt.subplot(gs[0:-1, 0:-1]))
 	ax1.axis('equal')
-
 
 	ax4 = plt.subplot(plt.subplot(gs[0:-1, 2]))
 	ax4.text(0.0, 0.6, 'The total volume:', fontsize=10)
@@ -519,7 +490,6 @@ with plt.xkcd():
 		for a, b in zip(*i):
 			a, b = int(a), int(b)
 			ax1.text(a, b, (a, b), ha='center', va='bottom', fontsize=10)
-
 
 	gx = [i for i in range(rd[4])]
 	ax5 = plt.subplot(plt.subplot(gs[2, :]))
