@@ -490,40 +490,41 @@ shear_forces_description = []
 for i, j in zip(rd[5], ['A', 'B']):
 	shear_forces_description.append('V{} = {:.1f}'.format(j, i/1000))
 
-fig1 = plt.figure('fig1')
-gs = GridSpec(3, 3)
+with plt.xkcd():
+	fig1 = plt.figure('fig1')
+	gs = GridSpec(3, 3)
 
 
-ax1 = plt.subplot(plt.subplot(gs[0:-1, 0:-1]))
-ax1.axis('equal')
+	ax1 = plt.subplot(plt.subplot(gs[0:-1, 0:-1]))
+	ax1.axis('equal')
 
 
-ax4 = plt.subplot(plt.subplot(gs[0:-1, 2]))
-ax4.text(0.0, 0.6, 'The total volume:', fontsize=10)
-ax4.text(0.1, 0.5, int(rd[2]), fontsize=10, color='red')
+	ax4 = plt.subplot(plt.subplot(gs[0:-1, 2]))
+	ax4.text(0.0, 0.6, 'The total volume:', fontsize=10)
+	ax4.text(0.1, 0.5, int(rd[2]), fontsize=10, color='red')
 
-ax4.text(0.0, 0.3, shear_forces_description[0], fontsize=10)
-ax4.text(0.0, 0.2, shear_forces_description[1], fontsize=10)
+	ax4.text(0.0, 0.3, shear_forces_description[0], fontsize=10)
+	ax4.text(0.0, 0.2, shear_forces_description[1], fontsize=10)
 
-ax4.text(0.4, 0.6, 'The uper branches:', fontsize=10)
-ax4.text(0.4, 0.5, pipe_description[0], fontsize=10, color='blue')
-ax4.text(0.4, 0.4, 'The trunk:', fontsize=10)
-ax4.text(0.4, 0.3, pipe_description[1], fontsize=10, color='blue')
+	ax4.text(0.4, 0.6, 'The uper branches:', fontsize=10)
+	ax4.text(0.4, 0.5, pipe_description[0], fontsize=10, color='blue')
+	ax4.text(0.4, 0.4, 'The trunk:', fontsize=10)
+	ax4.text(0.4, 0.3, pipe_description[1], fontsize=10, color='blue')
 
-ax4.set_axis_off()
+	ax4.set_axis_off()
 
-for i in data:
-	ax1.plot(*i)
-	ax1.plot(*i, 'bo')
-	for a, b in zip(*i):
-		a, b = int(a), int(b)
-		ax1.text(a, b, (a, b), ha='center', va='bottom', fontsize=10)
+	for i in data:
+		ax1.plot(*i)
+		ax1.plot(*i, 'bo')
+		for a, b in zip(*i):
+			a, b = int(a), int(b)
+			ax1.text(a, b, (a, b), ha='center', va='bottom', fontsize=10)
 
 
-gx = [i for i in range(rd[4])]
-ax5 = plt.subplot(plt.subplot(gs[2, :]))
-ax5.plot(gx, rd[3])
-plt.ylabel('Volume')
-plt.xlabel('Generation')
+	gx = [i for i in range(rd[4])]
+	ax5 = plt.subplot(plt.subplot(gs[2, :]))
+	ax5.plot(gx, rd[3])
+	plt.ylabel('Volume')
+	plt.xlabel('Generation')
 
 plt.show()
