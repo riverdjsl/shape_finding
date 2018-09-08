@@ -15,24 +15,6 @@ def trans_comma_str(string):
 			continue
 	return lst
 
-'''
-def NM(Nv, M0, lv):
-	l = np.sqrt(lv.dot(lv))
-	elv = lv/l
-	N = np.sqrt(Nv.dot(Nv))
-	eNv = Nv/N
-	Mv = np.cross(lv, Nv)
-	eMv = Mv/np.sqrt(Mv.dot(Mv))
-	eMv = np.nan_to_num(eMv)
-
-	try:
-		thitar = np.arccos(lv.dot(Nv)/(l*N))
-	except Exception:
-		thitar = 0
-	P = N*np.cos(thitar)*elv
-	M = N*np.sin(thitar)*np.sqrt(lv.dot(lv))*eMv+M0
-	return P, M, l, thitar
-'''
 
 class Steel345():
 	def __init__(s, t):
@@ -180,7 +162,7 @@ def chromosome_translator(individual, tmax, start_elev, A, B, PC):
 
 
 #sfitness points: the minimun value gets the highest point.	
-def point1(v, rou, TF):
+def point1(v, rou, TF, shears):
 	'''Fitness based on total volumes!'''
 	if TF is True:
 		return 5-v/1e8
@@ -188,10 +170,13 @@ def point1(v, rou, TF):
 		return 0
 
 
-def point2(v, rou, TF):
-	'''Fitness based on energy density.'''
+def point2(v, rou, TF, shears):
+	'''Fitness based on beam shear similarity.'''
 	if TF is True:
-		return rou*100
+		if abs(shears[0][0]-shears[1][0])<1:
+			return 5-v/1e8
+		else:
+			return 0
 	else:
 		return 0
 
@@ -367,7 +352,11 @@ def rawdata(filein):
 			dic2 = {'oi': (2*Rcy, ls[3])}
 			shear1 = C[0]*np.cos(angs[0])
 			shear2 = C[1]*np.cos(angs[1])
-			return dic1, dic2, [shear1, shear2]
+			Mb0 = q[0]*ls[4]**2/12
+			deltaM = shear1*ls[4]-q[0]*ls[4]**2/2
+			MA = Mb0+deltaM/2
+			MB = Mb0-deltaM/2
+			return dic1, dic2, [(shear1/1000, MA/1e6), (shear2/1000, MB/1e6)]
 			
 		dic1 = solver(angs, ls, forces)[0]
 		dic2 = solver(angs, ls, forces)[1]
@@ -401,7 +390,7 @@ def rawdata(filein):
 		print('\n\n\nGeneration {}.\n'.format(generation))
 
 		volume_g = list(map(energy, population, [forces]*len(population)))
-		pts = [point(i, j, k) for i, j, k, ii in volume_g]
+		pts = [point(i, j, k, ii) for i, j, k, ii in volume_g]
 
 		if generation > 0.6*g_num and abs(np.average(pts)-max(pts)) <= 0.005:
 			print("Ending the run 'cause convergence almost achieved!")
@@ -412,7 +401,7 @@ def rawdata(filein):
 		pama = select(population, pts)
 		kids = reproduction(pama)
 		v_kids = list(map(energy, kids, [forces]*len(kids)))
-		pts_k = [point(i, j, k) for i, j, k, ii in v_kids]
+		pts_k = [point(i, j, k, ii) for i, j, k, ii in v_kids]
 
 		for i in sorted(pts[:])[:4]:
 			for j in pts_k[:]:
@@ -460,7 +449,7 @@ for i in rd[0][1]:
 
 shear_forces_description = []
 for i, j in zip(rd[5], ['A', 'B']):
-	shear_forces_description.append('V{} = {:.1f}'.format(j, i/1000))
+	shear_forces_description.append('V{} = {:.1f}, M{} = {:.1f}'.format(j, i[0], j, i[1]))
 
 with plt.xkcd():
 	fig1 = plt.figure('fig1')
