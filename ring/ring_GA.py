@@ -1,4 +1,4 @@
-﻿import numpy as np
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 
@@ -47,18 +47,23 @@ class Pipe():
 		s.D = D
 		s.t = t
 		s.r = D/2
+		s.dD = (D-2*t)/D
+		#s.i22 = np.sqrt(s.i33**2+s.r**2)
 
 	def A(s):
-		return np.pi*s.D*s.t
+		return np.pi*s.D**2*(1-s.dD**2)/4
 
 	def I(s):
-		return np.pi*(s.D/2)**3*s.t
+		return np.pi*s.D**4*(1-s.dD**4)/64
 
 	def W(s):
-		return np.pi*(s.D/2)**2*s.t
+		return (np.pi*s.D**4*(1-s.dD**4)/64)/s.r
 
-	def i(s):
-		return np.sqrt((np.pi*(s.D/2)**3*s.t)/(np.pi*s.D*s.t))
+	def i33(s):
+		return np.sqrt((np.pi*s.D**4*(1-s.dD**4)/64)/(np.pi*s.D**2*(1-s.dD**2)/4))
+
+	def i22(s):
+		return np.sqrt((np.pi*s.D**4*(1-s.dD**4)/64)/(np.pi*s.D**2*(1-s.dD**2)/4)+s.r**2)
 
 
 def pipegenerater(ts, factor):
@@ -74,13 +79,13 @@ def fi(lambdai, f, E):
 		return ((alpha2+alpha3*lambdan+lambdan**2)-\
 		np.sqrt((alpha2+alpha3*lambdan+lambdan**2)**2-4*lambdan**2))\
 		/(2*lambdan**2)
-	
+
 
 def check2(ratio, N, l, u3, u2, E, f, W, I, A, i, r, t):
 
-	lambdax = u3*l/i
-	lambday = u2*l/i
-	
+	lambdax = u3*l/i[0]
+	lambday = u2*l/i[1]
+
 	if lambdax < 0.1:
 		Nex = 99999
 		fix = 1.0
@@ -89,16 +94,19 @@ def check2(ratio, N, l, u3, u2, E, f, W, I, A, i, r, t):
 		Nex = np.pi**2*E*I/(1.1*lambdax**2)
 		fix = fi(lambdax, f, E)
 		fiy = fi(lambday, f, E)
-	
+
 	part1 = N/(min(fix, fiy)*A*f)
 	part4 = N/(A*f)
-	condition1 = abs(part4)
-	condition2 = abs(part1)
-	
-	if condition1 <= ratio and condition2 <= 1 and max(lambdax, lambday) <= 120*np.sqrt(235/345):
-		return True
+	condition1 = part4
+	condition2 = part1
+	condition3 = lambdax/(120*np.sqrt(235/345))
+	condition4 = lambday/(120*np.sqrt(235/345))
+
+	if 0 <= condition1 <= ratio and condition2 <= ratio \
+		and condition3 <= 1 and condition4 <= 1:
+		return True, condition1, condition2, condition3, condition4
 	else:
-		return False
+		return False, condition1, condition2, condition3, condition4
 
 
 def strainenergy(N, l, u3, u2, E, f, W, I, A, i, r, t):
@@ -113,8 +121,8 @@ def strainenergy(N, l, u3, u2, E, f, W, I, A, i, r, t):
 
 def vars(pp, mt, mu):
 	return {'u3': mu[0], 'u2': mu[1], 'E': mt.E(), 'f': mt.fy(), \
-			'W': pp.W(), 'I': pp.I(), 'A': pp.A(), 'i': pp.i(), \
-			'r': pp.r, 't': pp.t}
+			'W': pp.W(), 'I': pp.I(), 'A': pp.A(), \
+			'i': [pp.i33(), pp.i22()], 'r': pp.r, 't': pp.t}
 
 
 def pointlist2(x1, x2, y2):
@@ -161,7 +169,7 @@ def chromosome_translator(individual, tmax, start_elev, A, B, PC):
 	return ([A, j], [B, j], [j, i], [i, PC], [A, B]), (t1, t2), (i, j)
 
 
-#sfitness points: the minimun value gets the highest point.	
+#sfitness points: the minimun value gets the highest point.
 def point1(v, rou, TF, shears):
 	'''Fitness based on total volumes!'''
 	if TF is True:
@@ -173,10 +181,17 @@ def point1(v, rou, TF, shears):
 def point2(v, rou, TF, shears):
 	'''Fitness based on beam shear similarity.'''
 	if TF is True:
-		if abs(shears[0][0]-shears[1][0])<1:
-			return 5-v/1e8
-		else:
-			return 0
+		dV = abs(shears[0][0]-shears[1][0])/max(shears[0][0], shears[1][0])
+		return 5-v/1e8-dV
+	else:
+		return 0
+
+
+def point3(v, rou, TF, shears):
+	'''Method 1 for BIG trees!'''
+	if TF is True:
+		dV = abs(shears[0][0]-shears[1][0])/max(shears[0][0], shears[1][0])
+		return 30-v/1e8-10*dV
 	else:
 		return 0
 
@@ -193,7 +208,7 @@ def funcchoose(funclist):
 		except Exception:
 			continue
 
-f = [point1, point2]
+f = [point1, point2, point3]
 funcchosen = funcchoose(f)
 point = funcchosen[0]
 
@@ -293,7 +308,7 @@ def rawdata(filein):
 	forces = dataindic['forces']
 	ratio = dataindic['ratio']
 	tmax = dataindic['tmax']
-	
+
 	start_elev = dataindic['starting_elevation'][0]
 
 	p_num = int(dataindic['population'][0])
@@ -315,7 +330,8 @@ def rawdata(filein):
 		energyi = []
 		volumei = []
 		checks = []
-		
+		sigmaf = []
+
 		def geo(line):
 			'''
 			line is [(x1, y1), (x2, y2)]
@@ -328,13 +344,13 @@ def rawdata(filein):
 				ang = np.pi/4
 			l = np.sqrt(dx**2+dy**2)
 			return ang, l
-		
+
 		angs = []
-		ls = []	
+		ls = []
 		for i in candidate:
 			angs.append(geo(i)[0])
 			ls.append(geo(i)[1])
-		
+
 		def solver(angs, ls, q):
 			'''
 			angs is [alpha, beta, gamma]
@@ -357,25 +373,26 @@ def rawdata(filein):
 			MA = Mb0+deltaM/2
 			MB = Mb0-deltaM/2
 			return dic1, dic2, [(shear1/1000, MA/1e6), (shear2/1000, MB/1e6)]
-			
+
 		dic1 = solver(angs, ls, forces)[0]
 		dic2 = solver(angs, ls, forces)[1]
 		shears = solver(angs, ls, forces)[2]
-		
+
 		for i, j in dic1.items():
 			energyi.append(strainenergy(*j, **vars1)[0])
 			volumei.append(strainenergy(*j, **vars1)[1])
-			checks.append(check2(ratio[0], *j, **vars1))
+			checks.append(check2(ratio[0], *j, **vars1)[0])
+			sigmaf.append([i, check2(ratio[0], *j, **vars1)[1:]])
 		for i, j in dic2.items():
 			energyi.append(strainenergy(*j, **vars2)[0])
 			volumei.append(strainenergy(*j, **vars2)[1])
-			checks.append(check2(ratio[0], *j, **vars2))
+			checks.append(check2(ratio[0], *j, **vars2)[0])
 
 		energy = sum(energyi)
 		volume = sum(volumei)
 		density = energy/volume
-		
-		return volume, density, all(checks), shears
+
+		return volume, density, all(checks), shears, sigmaf
 
 	population = []
 	for i in range(p_num):
@@ -390,7 +407,7 @@ def rawdata(filein):
 		print('\n\n\nGeneration {}.\n'.format(generation))
 
 		volume_g = list(map(energy, population, [forces]*len(population)))
-		pts = [point(i, j, k, ii) for i, j, k, ii in volume_g]
+		pts = [point(i, j, k, ii) for i, j, k, ii, jj in volume_g]
 
 		if generation > 0.6*g_num and abs(np.average(pts)-max(pts)) <= 0.005:
 			print("Ending the run 'cause convergence almost achieved!")
@@ -401,7 +418,7 @@ def rawdata(filein):
 		pama = select(population, pts)
 		kids = reproduction(pama)
 		v_kids = list(map(energy, kids, [forces]*len(kids)))
-		pts_k = [point(i, j, k, ii) for i, j, k, ii in v_kids]
+		pts_k = [point(i, j, k, ii) for i, j, k, ii, jj in v_kids]
 
 		for i in sorted(pts[:])[:4]:
 			for j in pts_k[:]:
@@ -415,13 +432,14 @@ def rawdata(filein):
 			population = population_mutation(population, possibility = 0.05)
 
 		volumemins.append(min(volume_g)[0])
-		print('\nCurrent Volumn: {:.1f}.'.format(min(volume_g)[0]))
+		print('\nCurrent Volume: {:.1f}.'.format(min(volume_g)[0]))
 		individual_em = population[volume_g.index(min(volume_g))]
 		shearforces = min(volume_g)[3]
+		sigma_o_f = min(volume_g)[4]
 
 		generation += 1
 
-	return chromosome_translator(individual_em, tmax, start_elev, *plist), dataindic['D_over_t'][0], min(volume_g)[0], volumemins, generation, shearforces
+	return chromosome_translator(individual_em, tmax, start_elev, *plist), dataindic['D_over_t'][0], min(volume_g)[0], volumemins, generation, shearforces, sigma_o_f
 
 
 rd = rawdata('ring_GA.txt')
@@ -434,7 +452,7 @@ for i in rd[0][0][:-1]:
 		xs.append(j[0])
 		ys.append(j[1])
 	data.append([xs, ys])
-	
+
 for i in rd[0][0][:-2]:
 	xs = []
 	ys = []
@@ -451,38 +469,52 @@ shear_forces_description = []
 for i, j in zip(rd[5], ['A', 'B']):
 	shear_forces_description.append('V{} = {:.1f}, M{} = {:.1f}'.format(j, i[0], j, i[1]))
 
-with plt.xkcd():
-	fig1 = plt.figure('fig1')
-	gs = GridSpec(3, 3)
+sigma_over_f_description = []
+slenderness_description = []
+for i in rd[6]:
+	sigma_over_f_description.append('σ({}) = {:.2f}, {:.2f}'.format(i[0], i[1][0], i[1][1]))
+	slenderness_description.append('λ({}) = {:.2f}, {:.2f}'.format(i[0], i[1][2], i[1][3]))
 
-	ax1 = plt.subplot(plt.subplot(gs[0:-1, 0:-1]))
-	ax1.axis('equal')
 
-	ax4 = plt.subplot(plt.subplot(gs[0:-1, 2]))
-	ax4.text(0.0, 0.6, 'The total volume:', fontsize=10)
-	ax4.text(0.1, 0.5, int(rd[2]), fontsize=20, color='red')
 
-	ax4.text(0.6, 0.6, 'The uper branches:', fontsize=10)
-	ax4.text(0.6, 0.55, pipe_description[0], fontsize=10, color='blue')
-	ax4.text(0.6, 0.4, 'The trunk:', fontsize=10)
-	ax4.text(0.6, 0.35, pipe_description[1], fontsize=10, color='blue')
+#with plt.xkcd():
+fig1 = plt.figure('fig1')
+gs = GridSpec(3, 3)
 
-	ax4.set_axis_off()
+ax1 = plt.subplot(plt.subplot(gs[0:-1, 0:-1]))
+ax1.axis('equal')
 
-	for i in data:
-		ax1.plot(*i)
-		ax1.plot(*i, 'bo')
-		for a, b in zip(*i):
-			a, b = int(a), int(b)
-			ax1.text(a, b, (a, b), ha='center', va='bottom', fontsize=8)
-	
-	ax1.text(data[0][0][0], data[0][1][0], shear_forces_description[0], ha='center', va='top', fontsize=8, color='red')
-	ax1.text(data[1][0][0], data[1][1][0], shear_forces_description[1], ha='center', va='top', fontsize=8, color='red')
+ax4 = plt.subplot(plt.subplot(gs[0:-1, 2]))
+ax4.text(0.0, 0.6, 'The total volume:', fontsize=10)
+ax4.text(0.1, 0.5, int(rd[2]), fontsize=20, color='red')
 
-	gx = [i for i in range(rd[4])]
-	ax5 = plt.subplot(plt.subplot(gs[2, :]))
-	ax5.plot(gx, rd[3])
-	plt.ylabel('Volume')
-	plt.xlabel('Generation')
+ax4.text(0.6, 0.6, 'The uper branches:', fontsize=10)
+ax4.text(0.6, 0.55, pipe_description[0], fontsize=10, color='blue')
+ax4.text(0.6, 0.4, 'The trunk:', fontsize=10)
+ax4.text(0.6, 0.35, pipe_description[1], fontsize=10, color='blue')
+
+for i, j in enumerate(sigma_over_f_description):
+	ax4.text(i*0.3, 0.0, j, fontsize=10, color='orange')
+
+for i, j in enumerate(slenderness_description):
+	ax4.text(i*0.3, 0.1, j, fontsize=10, color='orange')
+
+ax4.set_axis_off()
+
+for i in data:
+	ax1.plot(*i)
+	ax1.plot(*i, 'bo')
+	for a, b in zip(*i):
+		a, b = int(a), int(b)
+		ax1.text(a, b, (a, b), ha='center', va='bottom', fontsize=8)
+
+ax1.text(data[0][0][0], data[0][1][0], shear_forces_description[0], ha='center', va='top', fontsize=8, color='red')
+ax1.text(data[1][0][0], data[1][1][0], shear_forces_description[1], ha='center', va='top', fontsize=8, color='red')
+
+gx = [i for i in range(rd[4])]
+ax5 = plt.subplot(plt.subplot(gs[2, :]))
+ax5.plot(gx, rd[3])
+plt.ylabel('Volume')
+plt.xlabel('Generation')
 
 plt.show()

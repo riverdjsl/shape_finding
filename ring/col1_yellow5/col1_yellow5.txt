@@ -1,6 +1,6 @@
 tmax,15,
 D_over_t,29,
-geometry,-6726,0,3000,
+geometry,-6027,0,8000,
 starting_elevation,500,
 forces,20,
 ratio,0.8,
